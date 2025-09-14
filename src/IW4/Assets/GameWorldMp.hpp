@@ -8,16 +8,30 @@
 // ========================================================
 #pragma once
 
-#include "../IW5/Assets/GlassWorld.hpp"
-
 namespace ZoneTool
 {
 	namespace IW4
 	{
-		class IGameWorldMp : public IW5::IGlassWorld
+		class IGameWorldMp : public IAsset
 		{
+		private:
+			std::string name_;
+			GameWorldMp* asset_ = nullptr;
+
 		public:
+			static GameWorldMp* parse(const std::string& name, ZoneMemory* mem);
+
+			void init(const std::string& name, ZoneMemory* mem) override;
+			void init(void* asset, ZoneMemory* mem) override;
+
+			void prepare(ZoneBuffer* buf, ZoneMemory* mem) override;
+			void load_depending(IZone* zone) override;
+
+			void* pointer() override { return asset_; }
+			std::string name() override;
 			std::int32_t type() override;
+			void write(IZone* zone, ZoneBuffer* buffer) override;
+
 			static void dump(GameWorldMp* asset);
 		};
 	}

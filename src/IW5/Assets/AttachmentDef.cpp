@@ -143,48 +143,48 @@ namespace ZoneTool
 				}
 			}
 
-			/*if (data->projectile)
+			if (data->projectile)
 			{
 				if (data->projectile->projectileModel)
 				{
-					zone->AddAssetOfType(xmodel, data->projectile->projectileModel->name);
+					zone->add_asset_of_type(xmodel, data->projectile->projectileModel->name);
 				}
 
 				if (data->projectile->projExplosionEffect)
 				{
-					zone->AddAssetOfType(fx, data->projectile->projExplosionEffect->name);
+					zone->add_asset_of_type(fx, data->projectile->projExplosionEffect->name);
 				}
 
 				if (data->projectile->projExplosionSound)
 				{
-					zone->AddAssetOfType(sound, data->projectile->projExplosionSound->aliasName);
+					zone->add_asset_of_type(sound, data->projectile->projExplosionSound->aliasName);
 				}
 
 				if (data->projectile->projDudEffect)
 				{
-					zone->AddAssetOfType(fx, data->projectile->projDudEffect->name);
+					zone->add_asset_of_type(fx, data->projectile->projDudEffect->name);
 				}
 
 				if (data->projectile->projDudSound)
 				{
-					zone->AddAssetOfType(sound, data->projectile->projDudSound->aliasName);
+					zone->add_asset_of_type(sound, data->projectile->projDudSound->aliasName);
 				}
 
 				if (data->projectile->projTrailEffect)
 				{
-					zone->AddAssetOfType(fx, data->projectile->projTrailEffect->name);
+					zone->add_asset_of_type(fx, data->projectile->projTrailEffect->name);
 				}
 
 				if (data->projectile->projIgnitionEffect)
 				{
-					zone->AddAssetOfType(fx, data->projectile->projIgnitionEffect->name);
+					zone->add_asset_of_type(fx, data->projectile->projIgnitionEffect->name);
 				}
 
 				if (data->projectile->projIgnitionSound)
 				{
-					zone->AddAssetOfType(sound, data->projectile->projIgnitionSound->aliasName);
+					zone->add_asset_of_type(sound, data->projectile->projIgnitionSound->aliasName);
 				}
-			}*/
+			}
 		}
 
 		std::string IAttachmentDef::name()
@@ -259,7 +259,7 @@ namespace ZoneTool
 
 				ZoneBuffer::clear_pointer(&dest->reticleViewModels);
 			}
-
+			
 			if (data->ammogeneral)
 			{
 				buf->align(3);
@@ -273,28 +273,28 @@ namespace ZoneTool
 
 				ZoneBuffer::clear_pointer(&dest->ammogeneral);
 			}
-
+			
 			if (data->sight)
 			{
 				buf->align(3);
 				buf->write(data->sight);
 				ZoneBuffer::clear_pointer(&dest->sight);
 			}
-
+			
 			if (data->reload)
 			{
 				buf->align(1);
 				buf->write(data->reload);
 				ZoneBuffer::clear_pointer(&dest->reload);
 			}
-
+			
 			if (data->addOns)
 			{
 				buf->align(1);
 				buf->write(data->addOns);
 				ZoneBuffer::clear_pointer(&dest->addOns);
 			}
-
+			
 			if (data->general)
 			{
 				buf->align(3);
@@ -314,19 +314,19 @@ namespace ZoneTool
 
 				ZoneBuffer::clear_pointer(&dest->general);
 			}
-
+			
+			if (data->aimAssist)
+			{
+				buf->align(3);
+				buf->write(data->aimAssist);
+				ZoneBuffer::clear_pointer(&dest->aimAssist);
+			}
+			
 			if (data->ammunition)
 			{
 				buf->align(3);
 				buf->write(data->ammunition);
 				ZoneBuffer::clear_pointer(&dest->ammunition);
-			}
-
-			if (data->idleSettings)
-			{
-				buf->align(3);
-				buf->write(data->idleSettings);
-				ZoneBuffer::clear_pointer(&dest->idleSettings);
 			}
 
 			if (data->damage)
@@ -335,19 +335,19 @@ namespace ZoneTool
 				buf->write(data->damage);
 				ZoneBuffer::clear_pointer(&dest->damage);
 			}
-
+			
 			if (data->locationDamage)
 			{
 				buf->align(3);
-				buf->write(data->damage);
-				ZoneBuffer::clear_pointer(&dest->damage);
+				buf->write(data->locationDamage);
+				ZoneBuffer::clear_pointer(&dest->locationDamage);
 			}
 
-			if (data->scopeDriftSettings)
+			if (data->idleSettings)
 			{
 				buf->align(3);
-				buf->write(data->scopeDriftSettings);
-				ZoneBuffer::clear_pointer(&dest->scopeDriftSettings);
+				buf->write(data->idleSettings);
+				ZoneBuffer::clear_pointer(&dest->idleSettings);
 			}
 
 			if (data->adsSettings)
@@ -454,54 +454,65 @@ namespace ZoneTool
 				ZoneBuffer::clear_pointer(&dest->rumbles);
 			}
 
-			/*if (data->projectile)
+			if (data->projectile)
 			{
+				#define WEAPON_SOUND_CUSTOM(__field__) \
+				if (data->projectile->__field__) \
+				{ \
+					auto ptr = -1; \
+					buf->align(3); \
+					buf->write(&ptr); \
+					buf->write_str(data->projectile->__field__->name); \
+					ZoneBuffer::clear_pointer(&projectile->__field__); \
+				}
+
 				buf->align(3);
 				auto projectile = buf->write(data->projectile);
 
 				if (projectile->projectileModel)
 				{
-					projectile->projectileModel = reinterpret_cast<XModel*>(zone->GetAssetPointer(xmodel, projectile->projectileModel->name));
+					projectile->projectileModel = reinterpret_cast<XModel*>(zone->get_asset_pointer(xmodel, projectile->projectileModel->name));
 				}
 
 				if (projectile->projExplosionEffect)
 				{
-					projectile->projExplosionEffect = reinterpret_cast<FxEffectDef*>(zone->GetAssetPointer(fx, projectile->projExplosionEffect->name));
+					projectile->projExplosionEffect = reinterpret_cast<FxEffectDef*>(zone->get_asset_pointer(fx, projectile->projExplosionEffect->name));
 				}
 
 				if (projectile->projExplosionSound)
 				{
-					projectile->projExplosionSound = reinterpret_cast<snd_alias_list_t*>(zone->GetAssetPointer(sound, projectile->projExplosionSound->aliasName));
+					WEAPON_SOUND_CUSTOM(projExplosionSound);
 				}
 
 				if (projectile->projDudEffect)
 				{
-					projectile->projDudEffect = reinterpret_cast<FxEffectDef*>(zone->GetAssetPointer(fx, projectile->projDudEffect->name));
+					projectile->projDudEffect = reinterpret_cast<FxEffectDef*>(zone->get_asset_pointer(fx, projectile->projDudEffect->name));
 				}
 
 				if (projectile->projDudSound)
 				{
-					projectile->projDudSound = reinterpret_cast<snd_alias_list_t*>(zone->GetAssetPointer(sound, projectile->projDudSound->aliasName));
+					WEAPON_SOUND_CUSTOM(projDudSound);
 				}
 
 				if (projectile->projTrailEffect)
 				{
-					projectile->projTrailEffect = reinterpret_cast<FxEffectDef*>(zone->GetAssetPointer(fx, projectile->projTrailEffect->name));
+					projectile->projTrailEffect = reinterpret_cast<FxEffectDef*>(zone->get_asset_pointer(fx, projectile->projTrailEffect->name));
 				}
 
 				if (projectile->projIgnitionEffect)
 				{
-					projectile->projIgnitionEffect = reinterpret_cast<FxEffectDef*>(zone->GetAssetPointer(fx, projectile->projIgnitionEffect->name));
+					projectile->projIgnitionEffect = reinterpret_cast<FxEffectDef*>(zone->get_asset_pointer(fx, projectile->projIgnitionEffect->name));
 				}
 
 				if (projectile->projIgnitionSound)
 				{
-					projectile->projIgnitionSound = reinterpret_cast<snd_alias_list_t*>(zone->GetAssetPointer(sound, projectile->projIgnitionSound->aliasName));
+					WEAPON_SOUND_CUSTOM(projIgnitionSound);
 				}
 
 				ZoneBuffer::clear_pointer(&dest->projectile);
-			}*/
-			dest->projectile = nullptr;
+
+				#undef WEAPON_SOUND_CUSTOM
+			}
 
 			END_LOG_STREAM;
 			buf->pop_stream();

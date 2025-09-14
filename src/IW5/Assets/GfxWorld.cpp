@@ -51,12 +51,16 @@ namespace ZoneTool
 				asset->skies[i].skyImage = read.read_asset<GfxImage>();
 			}
 
-			asset->sunPrimaryLightIndex = read.read_int();
+			asset->lastSunPrimaryLightIndex = read.read_int();
 			asset->primaryLightCount = read.read_int();
-			asset->primaryLightEnvCount = read.read_int();
+			asset->sortKeyLitDecal = read.read_int();
+			asset->sortKeyEffectDecal = read.read_int();
+			asset->sortKeyEffectAuto = read.read_int();
+			asset->sortKeyDistortion = read.read_int();
 
-			char* unknown1 = read.read_array<char>();
-			memcpy(asset->unknown1, unknown1, 12);
+			//asset->sortKeyEffectDecal = 39;
+			//asset->sortKeyEffectAuto = 48;
+			//asset->sortKeyDistortion = 43;
 
 			// dpvsplanes
 			asset->dpvsPlanes.cellCount = read.read_int();
@@ -783,7 +787,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->primaryLightEntityShadowVis,
-				           (data->primaryLightCount - data->sunPrimaryLightIndex - 1) << 15);
+				           (data->primaryLightCount - data->lastSunPrimaryLightIndex - 1) << 15);
 				ZoneBuffer::clear_pointer(&dest->primaryLightEntityShadowVis);
 			}
 
@@ -791,7 +795,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->primaryLightDynEntShadowVis[0],
-				           data->dpvsDyn.dynEntClientCount[0] * (data->primaryLightCount - data->sunPrimaryLightIndex -
+				           data->dpvsDyn.dynEntClientCount[0] * (data->primaryLightCount - data->lastSunPrimaryLightIndex -
 					           1));
 				ZoneBuffer::clear_pointer(&dest->primaryLightDynEntShadowVis[0]);
 			}
@@ -800,7 +804,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->primaryLightDynEntShadowVis[1],
-				           data->dpvsDyn.dynEntClientCount[1] * (data->primaryLightCount - data->sunPrimaryLightIndex -
+				           data->dpvsDyn.dynEntClientCount[1] * (data->primaryLightCount - data->lastSunPrimaryLightIndex -
 					           1));
 				ZoneBuffer::clear_pointer(&dest->primaryLightDynEntShadowVis[1]);
 			}
@@ -1085,11 +1089,12 @@ namespace ZoneTool
 				write.dump_asset(asset->skies[i].skyImage);
 			}
 
-			write.dump_int(asset->sunPrimaryLightIndex);
+			write.dump_int(asset->lastSunPrimaryLightIndex);
 			write.dump_int(asset->primaryLightCount);
-			write.dump_int(asset->primaryLightEnvCount);
-
-			write.dump_array(asset->unknown1, 12);
+			write.dump_int(asset->sortKeyLitDecal);
+			write.dump_int(asset->sortKeyEffectDecal);
+			write.dump_int(asset->sortKeyEffectAuto);
+			write.dump_int(asset->sortKeyDistortion);
 
 			// dpvsplanes
 			write.dump_int(asset->dpvsPlanes.cellCount);
@@ -1251,14 +1256,14 @@ namespace ZoneTool
 
 			// PrimaryLightEntityShadowVis
 			write.dump_array(asset->primaryLightEntityShadowVis,
-			            (asset->primaryLightCount - asset->sunPrimaryLightIndex - 1) << 15);
+			            (asset->primaryLightCount - asset->lastSunPrimaryLightIndex - 1) << 15);
 
 			// PrimaryLightDynEntShadowVis
 			write.dump_array(asset->primaryLightDynEntShadowVis[0],
-			            asset->dpvsDyn.dynEntClientCount[0] * (asset->primaryLightCount - asset->sunPrimaryLightIndex -
+			            asset->dpvsDyn.dynEntClientCount[0] * (asset->primaryLightCount - asset->lastSunPrimaryLightIndex -
 				            1));
 			write.dump_array(asset->primaryLightDynEntShadowVis[1],
-			            asset->dpvsDyn.dynEntClientCount[1] * (asset->primaryLightCount - asset->sunPrimaryLightIndex -
+			            asset->dpvsDyn.dynEntClientCount[1] * (asset->primaryLightCount - asset->lastSunPrimaryLightIndex -
 				            1));
 
 			// PrimaryLightForModelDynEnt

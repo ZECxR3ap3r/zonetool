@@ -25,6 +25,16 @@ namespace ZoneTool
 		} \
 	}
 
+#define WEAPON_READ_FIELD_ARR_ALLOC(__type__, __field__, __size__) \
+	if (!data[#__field__].is_null()) \
+	{ \
+		weapon->__field__ = mem->Alloc<__type__>(__size__); \
+		for (auto idx##__field__ = 0u; idx##__field__ < __size__; idx##__field__++) \
+		{ \
+			*(__type__*)(&weapon->__field__[idx##__field__]) = (__type__)data[#__field__][idx##__field__].get<__type__>(); \
+		} \
+	}
+
 #define WEAPON_READ_STRING(__field__) \
 	if (!data[#__field__].is_null()) weapon->__field__ = mem->StrDup(data[#__field__].get<std::string>())
 
@@ -83,9 +93,9 @@ namespace ZoneTool
 			WEAPON_READ_FIELD(int,  iBreachRaiseTime);
 			WEAPON_READ_FIELD(int,  iEmptyRaiseTime);
 			WEAPON_READ_FIELD(int,  iEmptyDropTime);
-			WEAPON_READ_FIELD(int, sprintInTime);
-			WEAPON_READ_FIELD(int, sprintLoopTime);
-			WEAPON_READ_FIELD(int, sprintOutTime);
+			WEAPON_READ_FIELD(int,  sprintInTime);
+			WEAPON_READ_FIELD(int,  sprintLoopTime);
+			WEAPON_READ_FIELD(int,  sprintOutTime);
 			WEAPON_READ_FIELD(int,  stunnedTimeBegin);
 			WEAPON_READ_FIELD(int,  stunnedTimeLoop);
 			WEAPON_READ_FIELD(int,  stunnedTimeEnd);
@@ -357,7 +367,7 @@ namespace ZoneTool
 			WEAPON_READ_FIELD(float, destabilizationRateTime);
 			WEAPON_READ_FIELD(float, destabilizationCurvatureMax);
 			WEAPON_READ_FIELD(int, destabilizeDistance);
-			WEAPON_READ_FIELD_ARR(float, locationDamageMultipliers, 20);
+			WEAPON_READ_FIELD_ARR_ALLOC(float, locationDamageMultipliers, 20);
 			WEAPON_READ_STRING(fireRumble);
 			WEAPON_READ_STRING(meleeImpactRumble);
 			WEAPON_READ_ASSET(tracer, tracer, tracerType);
@@ -475,6 +485,10 @@ namespace ZoneTool
 				{
 					weapon->gunXModel[i] = DB_FindXAssetHeader(xmodel, gunmodel.data(), 1).xmodel;
 				}
+				else
+				{
+					weapon->gunXModel[i] = nullptr;
+				}
 			}
 			for (int i = 0; i < 16; i++)
 			{
@@ -483,6 +497,10 @@ namespace ZoneTool
 				if (!gunmodel.empty())
 				{
 					weapon->worldModel[i] = DB_FindXAssetHeader(xmodel, gunmodel.data(), 1).xmodel;
+				}
+				else
+				{
+					weapon->worldModel[i] = nullptr;
 				}
 			}
 
@@ -520,6 +538,43 @@ namespace ZoneTool
 				{
 					weapon->sounds[i] = DB_FindXAssetHeader(XAssetType::sound, sound.data(), 1).sound;
 				}
+				else
+				{
+					weapon->sounds[i] = nullptr;
+				}
+			}
+
+			if (data.contains("szXAnimsLeftHanded") && data["szXAnimsLeftHanded"].is_array()) {
+				weapon->szXAnimsLeftHanded = mem->Alloc<const char*>(42);
+
+				for (int i = 0; i < 42; i++) {
+					if (i < data["szXAnimsLeftHanded"].size() && data["szXAnimsLeftHanded"][i].is_string()) {
+						weapon->szXAnimsLeftHanded[i] = mem->StrDup(data["szXAnimsLeftHanded"][i].get<std::string>());
+					}
+					else {
+						weapon->szXAnimsLeftHanded[i] = nullptr;
+					}
+				}
+			}
+			else {
+				weapon->szXAnimsLeftHanded = nullptr;
+			}
+
+			if (data.contains("szXAnimsRightHanded") && data["szXAnimsRightHanded"].is_array()) {
+				weapon->szXAnimsRightHanded = mem->Alloc<const char*>(42);
+
+				for (int i = 0; i < 42; i++) {
+					if (i < data["szXAnimsRightHanded"].size() && data["szXAnimsRightHanded"][i].is_string()) {
+						weapon->szXAnimsRightHanded[i] = mem->StrDup(data["szXAnimsRightHanded"][i].get<std::string>());
+					}
+					else
+					{
+						weapon->szXAnimsRightHanded[i] = nullptr;
+					}
+				}
+			}
+			else {
+				weapon->szXAnimsRightHanded = nullptr;
 			}
 
 			return weapon;
@@ -616,6 +671,10 @@ namespace ZoneTool
 					weapon->scopes[i] = DB_FindXAssetHeader(XAssetType::attachment, attachment.data(), 1).
 						attachment;
 				}
+				else
+				{
+					weapon->scopes[i] = nullptr;
+				}
 			}
 			weapon->underBarrels = mem->Alloc<AttachmentDef*>(3);
 			for (int i = 0; i < 3; i++)
@@ -626,6 +685,10 @@ namespace ZoneTool
 				{
 					weapon->underBarrels[i] = DB_FindXAssetHeader(XAssetType::attachment, attachment.data(), 1).
 						attachment;
+				}
+				else
+				{
+					weapon->underBarrels[i] = nullptr;
 				}
 			}
 			weapon->others = mem->Alloc<AttachmentDef*>(4);
@@ -810,9 +873,23 @@ namespace ZoneTool
 				}
 			}
 
-			// weaponDef shit
-			auto data = mem->Alloc<WeaponDef>(); // weapon->WeaponDef;
+			auto data = mem->Alloc<WeaponDef>();
 			memcpy(data, weapon->weapDef, sizeof WeaponDef);
+
+			if (!data->szXAnimsRightHanded && data->szXAnimsRightHanded)
+			{
+				data->szXAnimsRightHanded = mem->Alloc<const char*>(42);
+				for (int i = 0; i < 42; ++i)
+					data->szXAnimsRightHanded[i] = (data->szXAnimsRightHanded && data->szXAnimsRightHanded[i]) ? mem->StrDup(data->szXAnimsRightHanded[i]) : nullptr;
+			}
+
+			if (!data->szXAnimsLeftHanded && data->szXAnimsLeftHanded)
+			{
+				data->szXAnimsLeftHanded = mem->Alloc<const char*>(42);
+				for (int i = 0; i < 42; ++i)
+					data->szXAnimsLeftHanded[i] = (data->szXAnimsLeftHanded && data->szXAnimsLeftHanded[i]) ? mem->StrDup(data->szXAnimsLeftHanded[i]) : nullptr;
+			}
+
 
 #define WEAPON_SCRIPTSTRING_ARRAY(__field__,__count__) \
 			if (data->__field__) \
@@ -904,6 +981,28 @@ namespace ZoneTool
 				}
 			}
 
+			if (data->szXAnimsRightHanded)
+			{
+				for (auto i = 0u; i < 42; i++)
+				{
+					if (data->szXAnimsRightHanded[i])
+					{
+						zone->add_asset_of_type(xanim, data->szXAnimsRightHanded[i]);
+					}
+				}
+			}
+
+			if (data->szXAnimsLeftHanded)
+			{
+				for (auto i = 0u; i < 42; i++)
+				{
+					if (data->szXAnimsLeftHanded[i])
+					{
+						zone->add_asset_of_type(xanim, data->szXAnimsLeftHanded[i]);
+					}
+				}
+			}
+
 			WEAPON_SUBASSET(viewShellEjectEffect, fx, FxEffectDef);
 			WEAPON_SUBASSET(worldShellEjectEffect, fx, FxEffectDef);
 			WEAPON_SUBASSET(viewLastShotEjectEffect, fx, FxEffectDef);
@@ -970,19 +1069,23 @@ namespace ZoneTool
 				{
 					zone->add_asset_of_type(attachment, this->asset_->scopes[i]->szInternalName);
 				}
+				
+			}
 
-				if (i >= 3) continue;
+			for (auto i = 0u; i < 3; i++)
+			{
+				if (data->underBarrels[i])
+				{
+					zone->add_asset_of_type(attachment, this->asset_->underBarrels[i]->szInternalName);
+				}
+			}
+
+			for (auto i = 0u; i < 4; i++)
+			{
 				if (data->others && data->others[i])
 				{
 					zone->add_asset_of_type(attachment, this->asset_->others[i]->szInternalName);
 				}
-
-				// Projectile attachments require fixing.
-				// if (i >= 4) continue;
-				// if (data->attachment2[i])
-				// {
-				// 	zone->AddAssetOfType(attachment, this->asset_->attachment2[i]->szInternalName);
-				// }
 			}
 
 			if (data->soundOverrides)
@@ -1003,7 +1106,7 @@ namespace ZoneTool
 
 			if (data->fxOverrides)
 			{
-				for (int i = 0; i < data->numSoundOverrides; i++)
+				for (int i = 0; i < data->numFXOverrides; i++)
 				{
 					 if (data->fxOverrides[i].overrideFX)
 					 {
@@ -1162,6 +1265,16 @@ namespace ZoneTool
 			WEAPON_SUBASSET(viewFlashEffect, fx, FxEffectDef);
 			WEAPON_SUBASSET(worldFlashEffect, fx, FxEffectDef);
 
+#define WEAPON_SOUND_CUSTOM(__field__) \
+		if (data->__field__) \
+		{ \
+			auto ptr = -1; \
+			buf->align(3); \
+			buf->write(&ptr); \
+			buf->write_str(data->__field__->name); \
+			ZoneBuffer::clear_pointer(&dest->__field__); \
+		}
+
 			for (auto i = 0u; i < 48; i++)
 			{
 				if (!data->sounds[i]) continue;
@@ -1181,12 +1294,7 @@ namespace ZoneTool
 
 				for (auto i = 0u; i < 31; i++)
 				{
-					if (destSounds[i])
-					{
-						destSounds[i] = reinterpret_cast<snd_alias_list_t*>(
-							zone->get_asset_pointer(sound, destSounds[i]->name)
-						);
-					}
+					WEAPON_SOUND_CUSTOM(bounceSound[i]);
 				}
 
 				ZoneBuffer::clear_pointer(&dest->bounceSound);
@@ -1199,12 +1307,7 @@ namespace ZoneTool
 
 				for (auto i = 0u; i < 31; i++)
 				{
-					if (destSounds[i])
-					{
-						destSounds[i] = reinterpret_cast<snd_alias_list_t*>(
-							zone->get_asset_pointer(sound, destSounds[i]->name)
-						);
-					}
+					WEAPON_SOUND_CUSTOM(rollingSound[i]);
 				}
 
 				ZoneBuffer::clear_pointer(&dest->rollingSound);
@@ -1273,8 +1376,8 @@ namespace ZoneTool
 			WEAPON_SUBASSET(projExplosionEffect, fx, FxEffectDef);
 			WEAPON_SUBASSET(projDudEffect, fx, FxEffectDef);
 
-			WEAPON_SUBASSET(projExplosionSound, sound, snd_alias_list_t);
-			WEAPON_SUBASSET(projDudSound, sound, snd_alias_list_t);
+			WEAPON_SOUND_CUSTOM(projExplosionSound);
+			WEAPON_SOUND_CUSTOM(projDudSound);
 
 			if (data->parallelBounce)
 			{
@@ -1294,7 +1397,7 @@ namespace ZoneTool
 			WEAPON_SUBASSET(projBeaconEffect, fx, FxEffectDef);
 			WEAPON_SUBASSET(projIgnitionEffect, fx, FxEffectDef);
 
-			WEAPON_SUBASSET(projIgnitionSound, sound, snd_alias_list_t);
+			WEAPON_SOUND_CUSTOM(projIgnitionSound);
 
 			if (data->accuracyGraphName[0])
 			{
@@ -1354,7 +1457,7 @@ namespace ZoneTool
 
 			WEAPON_SUBASSET(tracerType, tracer, TracerDef);
 
-			WEAPON_SUBASSET(turretOverheatSound, sound, snd_alias_list_t);
+			WEAPON_SOUND_CUSTOM(turretOverheatSound);
 			WEAPON_SUBASSET(turretOverheatEffect, fx, FxEffectDef);
 
 			if (data->turretBarrelSpinRumble)
@@ -1362,16 +1465,16 @@ namespace ZoneTool
 				dest->turretBarrelSpinRumble = buf->write_str(data->turretBarrelSpinRumble);
 			}
 
-			WEAPON_SUBASSET(turretBarrelSpinMaxSnd, sound, snd_alias_list_t);
+			WEAPON_SOUND_CUSTOM(turretBarrelSpinMaxSnd);
 
 			for (int i = 0; i < 4; i++)
 			{
-				WEAPON_SUBASSET(turretBarrelSpinUpSnd[i], sound, snd_alias_list_t);
-				WEAPON_SUBASSET(turretBarrelSpinDownSnd[i], sound, snd_alias_list_t);
+				WEAPON_SOUND_CUSTOM(turretBarrelSpinUpSnd[i]);
+				WEAPON_SOUND_CUSTOM(turretBarrelSpinDownSnd[i]);
 			}
 
-			WEAPON_SUBASSET(missileConeSoundAlias, sound, snd_alias_list_t);
-			WEAPON_SUBASSET(missileConeSoundAliasAtBase, sound, snd_alias_list_t);
+			WEAPON_SOUND_CUSTOM(missileConeSoundAlias);
+			WEAPON_SOUND_CUSTOM(missileConeSoundAliasAtBase);
 		}
 		
 		void IWeaponDef::write(IZone* zone, ZoneBuffer* buf)
@@ -1813,6 +1916,29 @@ namespace ZoneTool
 				}
 			}
 
+			for (int i = 0; i < 42; i++)
+			{
+				if (asset->szXAnimsRightHanded && asset->szXAnimsRightHanded[i])
+				{
+					data["szXAnimsRightHanded"][i] = asset->szXAnimsRightHanded[i];
+				}
+				else
+				{
+					data["szXAnimsRightHanded"][i] = "";
+				}
+			}
+
+			for (int i = 0; i < 42; i++)
+			{
+				if (asset->szXAnimsLeftHanded && asset->szXAnimsLeftHanded[i])
+				{
+					data["szXAnimsLeftHanded"][i] = asset->szXAnimsLeftHanded[i];
+				}
+				else
+				{
+					data["szXAnimsLeftHanded"][i] = "";
+				}
+			}
 
 			WEAPON_DUMP_FIELD(szOverlayName);
 			WEAPON_DUMP_ASSET(handXModel);
@@ -2186,20 +2312,10 @@ namespace ZoneTool
 				{
 					data["scopes"][i] = "";
 				}
+			}
 
-				if (i >= 4) continue;
-
-				if (asset->others && asset->others[i])
-				{
-					data["others"][i] = asset->others[i]->szInternalName;
-				}
-				else
-				{
-					data["others"][i] = "";
-				}
-
-				if (i >= 3) continue;
-
+			for (int i = 0; i < 3; i++)
+			{
 				if (asset->underBarrels && asset->underBarrels[i])
 				{
 					data["underBarrels"][i] = asset->underBarrels[i]->szInternalName;
@@ -2207,6 +2323,18 @@ namespace ZoneTool
 				else
 				{
 					data["underBarrels"][i] = "";
+				}
+			}
+
+			for (int i = 0; i < 4; i++)
+			{
+				if (asset->others && asset->others[i])
+				{
+					data["others"][i] = asset->others[i]->szInternalName;
+				}
+				else
+				{
+					data["others"][i] = "";
 				}
 			}
 

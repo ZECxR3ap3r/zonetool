@@ -265,37 +265,59 @@ char**>(0x00799278)[type]);
 				}
 				else
 				{
-					DECLARE_ASSET(phys_collmap, IPhysCollmap);
-					DECLARE_ASSET(tracer, ITracerDef);
-					DECLARE_ASSET(xmodelsurfs, IXSurface);
-					DECLARE_ASSET(xmodel, IXModel);
+					try
+					{
+						DECLARE_ASSET(phys_collmap, IPhysCollmap);
+						DECLARE_ASSET(tracer, ITracerDef);
+						DECLARE_ASSET(xmodelsurfs, IXSurface);
+						DECLARE_ASSET(xmodel, IXModel);
+						DECLARE_ASSET(material, IMaterial);
+						DECLARE_ASSET(xanim, IXAnimParts);
+						DECLARE_ASSET(techset, ITechset);
+						DECLARE_ASSET(gfx_map, IGfxWorld);
+						DECLARE_ASSET(col_map_mp, IClipMap);
+						DECLARE_ASSET(map_ents, IMapEnts);
+						DECLARE_ASSET(fx_map, IFxWorld);
+						DECLARE_ASSET(com_map, IComWorld);
+						DECLARE_ASSET(sound, ISound);
+						DECLARE_ASSET(sndcurve, ISoundCurve);
+						DECLARE_ASSET(loaded_sound, ILoadedSound);
+						DECLARE_ASSET(rawfile, IRawFile);
+						DECLARE_ASSET(stringtable, IStringTable);
+						DECLARE_ASSET(stringtable, IStringTable);
+						DECLARE_ASSET(vertexdecl, IVertexDecl);
+						DECLARE_ASSET(pixelshader, IPixelShader);
+						DECLARE_ASSET(vertexshader, IVertexShader);
+						DECLARE_ASSET(techset, ITechset);
+						DECLARE_ASSET(game_map_mp, IGameWorldMp);
+						DECLARE_ASSET(image, IGfxImage);
+						DECLARE_ASSET(fx, IFxEffectDef);
+						DECLARE_ASSET(lightdef, ILightDef);
+						DECLARE_ASSET(weapon, IWeaponDef);
+						DECLARE_ASSET(addon_map_ents, IAddonMapEnts);
+						DECLARE_ASSET(font, IFontDef);
+						DECLARE_ASSET(menu, IMenuDef);
+					}
+					catch (std::exception& ex)
+					{
+						ZONETOOL_FATAL("A fatal exception occured while dumping asset \"%s\", exception was: %s\n", get_asset_name(type, header), ex.what());
+					}
+				}
+			}
+			else
+			{
+				/*std::string fastfile = static_cast<std::string>((char*)(*(DWORD*)0x112A680 + 4));
+				if (fastfile.find("mp_") != std::string::npos || fastfile == "common_mp"s)
+				{
+					FileSystem::SetFastFile("");
+
+					// dump everything techset related!
 					DECLARE_ASSET(material, IMaterial);
-					DECLARE_ASSET(xanim, IXAnimParts);
 					DECLARE_ASSET(techset, ITechset);
-					DECLARE_ASSET(gfx_map, IGfxWorld);
-					DECLARE_ASSET(col_map_mp, IClipMap);
-					DECLARE_ASSET(map_ents, IMapEnts);
-					DECLARE_ASSET(fx_map, IFxWorld);
-					DECLARE_ASSET(com_map, IComWorld);
-					DECLARE_ASSET(sound, ISound);
-					DECLARE_ASSET(sndcurve, ISoundCurve);
-					DECLARE_ASSET(loaded_sound, ILoadedSound);
-					DECLARE_ASSET(rawfile, IRawFile);
-					DECLARE_ASSET(stringtable, IStringTable);
-					DECLARE_ASSET(stringtable, IStringTable);
-					DECLARE_ASSET(vertexdecl, IVertexDecl);
 					DECLARE_ASSET(pixelshader, IPixelShader);
 					DECLARE_ASSET(vertexshader, IVertexShader);
-					DECLARE_ASSET(techset, ITechset);
-					DECLARE_ASSET(game_map_mp, IGameWorldMp);
-					DECLARE_ASSET(image, IGfxImage);
-					DECLARE_ASSET(fx, IFxEffectDef);
-					DECLARE_ASSET(lightdef, ILightDef);
-					DECLARE_ASSET(weapon, IWeaponDef);
-					DECLARE_ASSET(addon_map_ents, IAddonMapEnts);
-					DECLARE_ASSET(font, IFontDef);
-					DECLARE_ASSET(menu, IMenuDef);
-				}
+					DECLARE_ASSET(vertexdecl, IVertexDecl);
+				}*/
 			}
 		}
 
@@ -866,7 +888,7 @@ char**>(0x00799278)[type]);
 
 		void Linker::verify_zone(const std::string& name)
 		{
-			should_log = true;
+			//should_log = true;
 			isVerifying = true;
 			currentDumpingZone = name;
 			load_zone(name);

@@ -51,6 +51,7 @@ namespace ZoneTool
 			for (int i = 0; i < asset->numLods; i++)
 			{
 				asset->lods[i].surfaces = read.read_asset<ModelSurface>();
+				asset->lods[i].surfs = nullptr;
 			}
 
 			// colSurfs
@@ -204,7 +205,7 @@ namespace ZoneTool
 			
 			// don't reparse the surfaces
 			// this->is_scope_model_ = true;
-			
+
 			if (!this->asset_)
 			{
 				this->asset_ = DB_FindXAssetHeader(this->type(), this->name_.data(), 1).xmodel;

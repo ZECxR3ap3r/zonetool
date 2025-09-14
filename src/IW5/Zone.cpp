@@ -38,13 +38,9 @@ namespace ZoneTool
 				return;
 			}
 			
-			// don't add asset if it already exists
-			for (std::size_t idx = 0; idx < m_assets.size(); idx++)
+			if (get_asset_pointer(type, GetAssetName(type, pointer)))
 			{
-				if (m_assets[idx]->type() == type && m_assets[idx]->pointer() == pointer)
-				{
-					return;
-				}
+				return;
 			}
 
 #define DECLARE_ASSET(__type__, __interface__) \
@@ -56,10 +52,19 @@ namespace ZoneTool
 				m_assets.push_back(asset); \
 			}
 
-			// declare asset interfaces
-			DECLARE_ASSET(xmodelsurfs, IXSurface);
-			DECLARE_ASSET(image, IGfxImage);
-			DECLARE_ASSET(glass_map, IGlassWorld);
+			try
+			{
+				// declare asset interfaces
+				DECLARE_ASSET(xmodelsurfs, IXSurface);
+				DECLARE_ASSET(image, IGfxImage);
+				DECLARE_ASSET(glass_map, IGlassWorld);
+				DECLARE_ASSET(menu, IMenuDef);
+				DECLARE_ASSET(localize, ILocalizeEntry);
+			}
+			catch (std::exception& ex)
+			{
+				ZONETOOL_FATAL("A fatal exception occured while adding asset \"%s\", exception was: %s\n", GetAssetName(type, pointer), ex.what());
+			}
 		}
 
 		void Zone::add_asset_of_type(std::int32_t type, const std::string& name)
@@ -84,40 +89,48 @@ namespace ZoneTool
 				m_assets.push_back(asset); \
 			}
 
-			// declare asset interfaces
-			DECLARE_ASSET(xanim, IXAnimParts);
-			DECLARE_ASSET(pixelshader, IPixelShader);
-			DECLARE_ASSET(vertexdecl, IVertexDecl);
-			DECLARE_ASSET(vertexshader, IVertexShader);
-			DECLARE_ASSET(techset, ITechset);
-			DECLARE_ASSET(image, IGfxImage);
-			DECLARE_ASSET(material, IMaterial)
-			DECLARE_ASSET(xmodelsurfs, IXSurface);
-			DECLARE_ASSET(xmodel, IXModel);
-			DECLARE_ASSET(map_ents, IMapEnts);
-			DECLARE_ASSET(col_map_mp, IClipMap);
-			DECLARE_ASSET(gfx_map, IGfxWorld);
-			DECLARE_ASSET(rawfile, IRawFile);
-			DECLARE_ASSET(com_map, IComWorld);
-			DECLARE_ASSET(font, IFontDef);
-			DECLARE_ASSET(leaderboarddef, ILeaderBoardDef);
-			DECLARE_ASSET(localize, ILocalizeEntry);
-			DECLARE_ASSET(attachment, IAttachmentDef);
-			DECLARE_ASSET(physpreset, IPhysPreset);
-			DECLARE_ASSET(phys_collmap, IPhysCollmap);
-			DECLARE_ASSET(fx, IFxEffectDef);
-			DECLARE_ASSET(stringtable, IStringTable);
-			DECLARE_ASSET(sound, ISound);
-			DECLARE_ASSET(loaded_sound, ILoadedSound);
-			DECLARE_ASSET(sndcurve, ISoundCurve);
-			DECLARE_ASSET(glass_map, IGlassWorld);
-			DECLARE_ASSET(fx_map, IFxWorld);
-			DECLARE_ASSET(weapon, IWeaponDef);
-			DECLARE_ASSET(structureddatadef, IStructuredDataDef);
-			DECLARE_ASSET(menu, IMenuDef);
-			DECLARE_ASSET(scriptfile, IScriptFile);
-			DECLARE_ASSET(lightdef, ILightDef);
-			DECLARE_ASSET(font, IFontDef);
+			try
+			{
+				// declare asset interfaces
+				DECLARE_ASSET(xanim, IXAnimParts);
+				DECLARE_ASSET(pixelshader, IPixelShader);
+				DECLARE_ASSET(vertexdecl, IVertexDecl);
+				DECLARE_ASSET(vertexshader, IVertexShader);
+				DECLARE_ASSET(techset, ITechset);
+				DECLARE_ASSET(image, IGfxImage);
+				DECLARE_ASSET(material, IMaterial);
+				DECLARE_ASSET(xmodelsurfs, IXSurface);
+				DECLARE_ASSET(xmodel, IXModel);
+				DECLARE_ASSET(map_ents, IMapEnts);
+				DECLARE_ASSET(col_map_mp, IClipMap);
+				DECLARE_ASSET(gfx_map, IGfxWorld);
+				DECLARE_ASSET(rawfile, IRawFile);
+				DECLARE_ASSET(com_map, IComWorld);
+				DECLARE_ASSET(font, IFontDef);
+				DECLARE_ASSET(leaderboarddef, ILeaderBoardDef);
+				DECLARE_ASSET(localize, ILocalizeEntry);
+				DECLARE_ASSET(attachment, IAttachmentDef);
+				DECLARE_ASSET(physpreset, IPhysPreset);
+				DECLARE_ASSET(phys_collmap, IPhysCollmap);
+				DECLARE_ASSET(fx, IFxEffectDef);
+				DECLARE_ASSET(stringtable, IStringTable);
+				DECLARE_ASSET(sound, ISound);
+				DECLARE_ASSET(loaded_sound, ILoadedSound);
+				DECLARE_ASSET(sndcurve, ISoundCurve);
+				DECLARE_ASSET(glass_map, IGlassWorld);
+				DECLARE_ASSET(fx_map, IFxWorld);
+				DECLARE_ASSET(weapon, IWeaponDef);
+				DECLARE_ASSET(structureddatadef, IStructuredDataDef);
+				DECLARE_ASSET(menu, IMenuDef);
+				DECLARE_ASSET(menufile, IMenuList);
+				DECLARE_ASSET(scriptfile, IScriptFile);
+				DECLARE_ASSET(lightdef, ILightDef);
+				DECLARE_ASSET(font, IFontDef);
+			}
+			catch (std::exception& ex)
+			{
+				ZONETOOL_FATAL("A fatal exception occured while adding asset \"%s\", exception was: %s\n", name.data(), ex.what());
+			}
 		}
 
 		std::int32_t Zone::get_type_by_name(const std::string& type)
@@ -216,6 +229,11 @@ namespace ZoneTool
 			// write assets
 			for (auto& asset : m_assets)
 			{
+#ifdef DEBUG
+				auto xassettypes = reinterpret_cast<char**>(0x7C6208);
+				ZONETOOL_INFO("writing asset \"%s\" of type %s...", asset->name().data(), xassettypes[asset->type()]);
+#endif
+
 				// push stream
 				buf->push_stream(0);
 				buf->align(3);
@@ -260,8 +278,11 @@ namespace ZoneTool
 
 			fastfile.write(buf_compressed.data(), buf_compressed.size());
 
-			std::string localappdata = getenv("LOCALAPPDATA");
-			fastfile.save(localappdata + "\\Plutonium-staging\\storage\\iw5\\zone\\" + this->name_ + ".ff");
+			if (this->name_.starts_with("mp_"))
+			{
+				std::string localappdata = getenv("LOCALAPPDATA");
+				fastfile.save(localappdata + "\\Plutonium\\storage\\iw5\\zone\\" + this->name_ + ".ff");
+			}
 
 			// oxygen output paths
 			// fastfile.save("C:\\Users\\RektInator\\AppData\\Local\\Plutonium\\storage\\iw5\\zone\\" + this->name_ + ".ff");

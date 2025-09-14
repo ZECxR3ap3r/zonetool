@@ -15,7 +15,6 @@ namespace ZoneTool
 	{		
 		void IWeaponDef::dump(WeaponCompleteDef* weapon)
 		{
-#ifdef GENERATE_IW5_WEAPONS
 			// experimental iw5 dump code
 			auto* iw5_weapon = new IW5::WeaponCompleteDef;
 			memset(iw5_weapon, 0, sizeof IW5::WeaponCompleteDef);
@@ -79,7 +78,6 @@ namespace ZoneTool
 			delete[] iw5_weapon->weapDef;
 			delete[] iw5_weapon->szXAnims;
 			delete iw5_weapon;
-#endif
 		}
 	}
 }

@@ -10,6 +10,8 @@
 #include "ZoneUtils/Utils/BinaryDumper.hpp"
 #include "../IW5/Assets/MapEnts.hpp"
 
+//#define CONVERT_IW5_MAPENTS
+
 namespace ZoneTool
 {
 	namespace IW4
@@ -74,7 +76,7 @@ namespace ZoneTool
 		};
 		std::unordered_map<std::string, std::string> key_conversion_reversed;
 
-		void IMapEnts::convert_ents(MapEnts* ents, ZoneMemory* mem)
+		void convert_ents(MapEnts* ents, ZoneMemory* mem)
 		{
 			ZONETOOL_INFO("Converting mapents!");
 
@@ -226,7 +228,7 @@ namespace ZoneTool
 
 #ifdef CONVERT_IW5_MAPENTS
 			// convert the mapents!
-			this->convert_ents(ents, mem);
+			convert_ents(ents, mem);
 #endif
 			
 			// close filepointer

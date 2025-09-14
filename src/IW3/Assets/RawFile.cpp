@@ -6,16 +6,26 @@
 // Author: RektInator (https://github.com/RektInator)
 // License: GNU GPL v3.0
 // ========================================================
-#pragma once
+#include "stdafx.hpp"
+#include "RawFile.hpp"
 
 namespace ZoneTool
 {
 	namespace IW3
 	{
-		class IGameWorldMp
+		void IRawFile::dump(RawFile* asset, ZoneMemory* mem)
 		{
-		public:
-			static void dump(GameWorldMp* asset, ZoneMemory* mem);
-		};
+			auto fp = FileSystem::FileOpen(asset->name, "wb");
+
+			if (fp)
+			{
+				if (asset->len > 0)
+				{
+					fwrite(asset->buffer, asset->len, 1, fp);
+				}
+			}
+
+			FileSystem::FileClose(fp);
+		}
 	}
 }

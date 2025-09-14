@@ -96,7 +96,11 @@ namespace ZoneTool
 			// convert to IW4
 			auto* asset = mem->Alloc<IW4::VertexDecl>();
 			
+#ifdef IW3_TECHSET_FOLDER
 			asset->name = mem->StrDup(va("iw3/%s", name.data()));
+#else
+			asset->name = mem->StrDup(name.data());
+#endif
 
 			asset->hasOptionalSource = vertex->hasOptionalSource;
 			asset->streamCount = vertex->streamCount;
@@ -129,7 +133,11 @@ namespace ZoneTool
 			// convert to IW4
 			auto* asset = mem->Alloc<IW4::VertexShader>();
 
+#ifdef IW3_TECHSET_FOLDER
 			asset->name = mem->StrDup(va("iw3/%s", shader->name));
+#else
+			asset->name = mem->StrDup(shader->name);
+#endif
 			asset->shader = shader->prog.vs;
 			asset->codeLen = shader->prog.loadDef.programSize;
 			asset->bytecode = PDWORD(shader->prog.loadDef.program);
@@ -145,7 +153,11 @@ namespace ZoneTool
 			// convert to IW4
 			auto* asset = mem->Alloc<IW4::PixelShader>();
 
+#ifdef IW3_TECHSET_FOLDER
 			asset->name = mem->StrDup(va("iw3/%s", shader->name));
+#else
+			asset->name = mem->StrDup(shader->name);
+#endif
 			asset->shader = shader->prog.ps;
 			asset->codeLen = shader->prog.loadDef.programSize;
 			asset->bytecode = PDWORD(shader->prog.loadDef.program);
@@ -367,7 +379,11 @@ namespace ZoneTool
 		{
 			auto* iw4_techset = mem->Alloc<IW4::MaterialTechniqueSet>();
 
+#ifdef IW3_TECHSET_FOLDER
 			iw4_techset->name = mem->StrDup(va("iw3/%s", asset->name));
+#else
+			iw4_techset->name = mem->StrDup(asset->name);
+#endif
 			iw4_techset->pad = asset->pad;
 			
 			for (int i = 0; i < 34; i++)
@@ -390,7 +406,11 @@ namespace ZoneTool
 						auto& iw3_technique = asset->techniques[i];
 						auto& technique = iw4_techset->techniques[itr->second];
 
+#ifdef IW3_TECHSET_FOLDER
 						technique->hdr.name = mem->StrDup(va("iw3/%s", technique->hdr.name));
+#else
+						technique->hdr.name = mem->StrDup(technique->hdr.name);
+#endif
 
 						if ((technique->hdr.flags & 0x10) == 0x10)
 						{

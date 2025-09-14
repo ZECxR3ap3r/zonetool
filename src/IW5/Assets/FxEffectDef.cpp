@@ -102,7 +102,10 @@ namespace ZoneTool
 				}
 				else
 				{
-					parse_visuals(&read, def, &def->visuals.instance);
+					if (def->visualCount)
+					{
+						parse_visuals(&read, def, &def->visuals.instance);
+					}
 				}
 
 				def->effectOnImpact = read.read_asset<FxEffectDefRef>();
@@ -206,7 +209,7 @@ namespace ZoneTool
 						zone->add_asset_of_type(xmodel, vis->instance.xmodel->name);
 					else
 					{
-						if (def->elemType != 8)
+						if (def->elemType != 8 && vis->instance.material)
 							zone->add_asset_of_type(material, vis->instance.material->name);
 					}
 				}
@@ -226,7 +229,8 @@ namespace ZoneTool
 					zone->add_asset_of_type(fx, def.effectOnImpact->name);
 
 				// Visuals
-				load_FxElemVisuals(&def, &def.visuals);
+				if(def.visualCount)
+					load_FxElemVisuals(&def, &def.visuals);
 			}
 		}
 
@@ -280,9 +284,9 @@ namespace ZoneTool
 					if (def->elemType != FX_ELEM_TYPE_OMNI_LIGHT)
 					{
 						dest->material = (data->material)
-							                 ? reinterpret_cast<Material*>(zone->get_asset_pointer(
-								                 material, data->material->name))
-							                 : nullptr;
+							? reinterpret_cast<Material*>(zone->get_asset_pointer(
+								material, data->material->name))
+							: nullptr;
 					}
 				}
 			}
@@ -321,7 +325,7 @@ namespace ZoneTool
 					write_fx_elem_visuals(zone, buf, def, &vis[i]);
 				}
 			}
-			else
+			else if (def->visualCount)
 			{
 				write_fx_elem_visuals(zone, buf, def, &dest->instance);
 			}
@@ -372,18 +376,20 @@ namespace ZoneTool
 					if (data->extended.trailDef)
 					{
 						buf->align(3);
-						buf->write(data->extended.trailDef, sizeof(FxTrailDef));
+						auto dest_traildef = buf->write(data->extended.trailDef);
 
 						if (data->extended.trailDef->verts)
 						{
 							buf->align(3);
 							buf->write(data->extended.trailDef->verts, data->extended.trailDef->vertCount);
+							ZoneBuffer::clear_pointer(&dest_traildef->verts);
 						}
 
 						if (data->extended.trailDef->inds)
 						{
 							buf->align(1);
 							buf->write(data->extended.trailDef->inds, data->extended.trailDef->indCount);
+							ZoneBuffer::clear_pointer(&dest_traildef->inds);
 						}
 
 						ZoneBuffer::clear_pointer(&dest->extended.trailDef);
@@ -548,17 +554,17 @@ count.amplitude)[0]);
 				PRINTFLOATRANGE(1, "spawnOffsetRadius", elem->spawnOffsetRadius);
 				PRINTFLOATRANGE(1, "spawnOffsetHeight", elem->spawnOffsetHeight);
 				PRINTFLOATRANGE(1, "spawnAnglePitch", elem->spawnAngles[0]);
-				PRINTFLOATRANGE(1, "spawnAngleYaw", elem->spawnAngles[1]);
-				PRINTFLOATRANGE(1, "spawnAngleRoll", elem->spawnAngles[2]);
-				PRINTFLOATRANGE(1, "angleVelPitch", elem->angularVelocity[0]);
-				PRINTFLOATRANGE(1, "angleVelYaw", elem->angularVelocity[1]);
-				PRINTFLOATRANGE(1, "angleVelRoll", elem->angularVelocity[2]);
-				PRINTFLOATRANGE(1, "initialRot", elem->initialRotation);
-				PRINTFLOATRANGE(1, "gravity", elem->gravity);
-				PRINTFLOATRANGE(1, "elasticity", elem->reflectionFactor); // NOT SURE
+PRINTFLOATRANGE(1, "spawnAngleYaw", elem->spawnAngles[1]);
+PRINTFLOATRANGE(1, "spawnAngleRoll", elem->spawnAngles[2]);
+PRINTFLOATRANGE(1, "angleVelPitch", elem->angularVelocity[0]);
+PRINTFLOATRANGE(1, "angleVelYaw", elem->angularVelocity[1]);
+PRINTFLOATRANGE(1, "angleVelRoll", elem->angularVelocity[2]);
+PRINTFLOATRANGE(1, "initialRot", elem->initialRotation);
+PRINTFLOATRANGE(1, "gravity", elem->gravity);
+PRINTFLOATRANGE(1, "elasticity", elem->reflectionFactor); // NOT SURE
 
-				for (int g = 0; g < std::min(elem->velIntervalCount + 1, 2); g++)
-				{
+for (int g = 0; g < std::min(elem->velIntervalCount + 1, 2); g++)
+{
 #define DUMPVELGRAPH(__INDEX__, __CHARACTER__) \
 					fprintf(fp, "\tvelGraph%i" __CHARACTER__ " 0\n", g); \
 					fprintf(fp, "\t{\n"); \
@@ -572,32 +578,32 @@ count.amplitude)[0]);
 					fprintf(fp, "\t\t}\n"); \
 					fprintf(fp, "\t};\n")
 
-					DUMPVELGRAPH(0, "X");
-					DUMPVELGRAPH(1, "Y");
-					DUMPVELGRAPH(2, "Z");
-				}
+	DUMPVELGRAPH(0, "X");
+	DUMPVELGRAPH(1, "Y");
+	DUMPVELGRAPH(2, "Z");
+}
 
-				// TODO dump atlas data
-				PRINTINT(1, "atlastBehavior", elem->atlas.behavior);
-				PRINTINT(1, "atlasIndex", elem->atlas.index);
-				PRINTINT(1, "atlasFps", elem->atlas.fps);
-				PRINTINT(1, "atlasLoopCount", elem->atlas.loopCount);
-				PRINTINT(1, "atlasColIndexBits", elem->atlas.colIndexBits);
-				PRINTINT(1, "atlasRowIndexBits", elem->atlas.rowIndexBits);
-				PRINTINT(1, "atlasEntryCount", elem->atlas.entryCount);
+// TODO dump atlas data
+PRINTINT(1, "atlastBehavior", elem->atlas.behavior);
+PRINTINT(1, "atlasIndex", elem->atlas.index);
+PRINTINT(1, "atlasFps", elem->atlas.fps);
+PRINTINT(1, "atlasLoopCount", elem->atlas.loopCount);
+PRINTINT(1, "atlasColIndexBits", elem->atlas.colIndexBits);
+PRINTINT(1, "atlasRowIndexBits", elem->atlas.rowIndexBits);
+PRINTINT(1, "atlasEntryCount", elem->atlas.entryCount);
 
-				// TODO dump graphs
-				PRINTINT(1, "lightingFrac", elem->lightingFrac);
-				// TODO convert bounds to origin + radius
-				PRINTSTRING(1, "fxOnImpact", (elem->effectOnImpact) ? elem->effectOnImpact->name : "");
-				PRINTSTRING(1, "fxOnDeath", (elem->effectOnDeath) ? elem->effectOnDeath->name : "");
-				PRINTINT(1, "sortOrder", elem->sortOrder);
-				PRINTSTRING(1, "emission", (elem->effectEmitted) ? elem->effectEmitted->name : "");
-				// TODO add trail data
-				PRINTFLOATRANGE(1, "emitDist", elem->emitDist);
-				PRINTFLOATRANGE(1, "emitDistVariance", elem->emitDistVariance);
+// TODO dump graphs
+PRINTINT(1, "lightingFrac", elem->lightingFrac);
+// TODO convert bounds to origin + radius
+PRINTSTRING(1, "fxOnImpact", (elem->effectOnImpact) ? elem->effectOnImpact->name : "");
+PRINTSTRING(1, "fxOnDeath", (elem->effectOnDeath) ? elem->effectOnDeath->name : "");
+PRINTINT(1, "sortOrder", elem->sortOrder);
+PRINTSTRING(1, "emission", (elem->effectEmitted) ? elem->effectEmitted->name : "");
+// TODO add trail data
+PRINTFLOATRANGE(1, "emitDist", elem->emitDist);
+PRINTFLOATRANGE(1, "emitDistVariance", elem->emitDistVariance);
 
-				fprintf(fp, "}\n");
+fprintf(fp, "}\n");
 			}
 
 
@@ -642,7 +648,7 @@ count.amplitude)[0]);
 				}
 			}
 		}
-		
+
 		void IFxEffectDef::dump(FxEffectDef* asset)
 		{
 			AssetDumper dump;
@@ -695,7 +701,7 @@ count.amplitude)[0]);
 						dump_visuals(&dump, def, &def->visuals.array[vis]);
 					}
 				}
-				else
+				else if(def->visualCount)
 				{
 					dump_visuals(&dump, def, &def->visuals.instance);
 				}

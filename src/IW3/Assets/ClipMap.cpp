@@ -133,7 +133,8 @@ namespace ZoneTool
 				            sizeof(iw4_clipmap->brushes[i].edgeCount));
 
 				iw4_clipmap->brushes[i].numsides = asset->brushes[i].numsides;
-				iw4_clipmap->brushes[i].sides = mapped_brush_sides.find(asset->brushes[i].sides)->second;
+				if (asset->brushes[i].sides)
+					iw4_clipmap->brushes[i].sides = mapped_brush_sides.find(asset->brushes[i].sides)->second;
 				iw4_clipmap->brushes[i].edge = asset->brushes[i].baseAdjacentSide;
 				iw4_clipmap->brushes[i].numsides = asset->brushes[i].numsides;
 
@@ -179,35 +180,124 @@ namespace ZoneTool
 				iw4_clipmap->smodelNodes[0].firstChild = 0;
 			}
 
-			iw4_clipmap->mapEnts = mem->Alloc<IW4::MapEnts>(); //  asset->mapEnts;
-			memcpy(iw4_clipmap->mapEnts, asset->mapEnts, sizeof MapEnts);
+			iw4_clipmap->mapEnts = mem->Alloc<IW4::MapEnts>();
+			iw4_clipmap->mapEnts->name = asset->mapEnts->name;
 
-			iw4_clipmap->mapEnts->stageCount = 1;
-			iw4_clipmap->mapEnts->stageNames = mem->Alloc<IW4::Stage>();
-			iw4_clipmap->mapEnts->stageNames[0].stageName = mem->StrDup("stage 0");
-			iw4_clipmap->mapEnts->stageNames[0].triggerIndex = 0x400;
-			iw4_clipmap->mapEnts->stageNames[0].sunPrimaryLightIndex = 0x1;
+			auto* iw4_mapEnts = iw4_clipmap->mapEnts;
 
-			iw4_clipmap->dynEntCount[0] = asset->dynEntCount[0];
-			iw4_clipmap->dynEntCount[1] = asset->dynEntCount[1];
+			// add triggers to mapEnts
+			if (asset->cmodels)
+			{
+				iw4_mapEnts->trigger.modelCount = asset->numSubModels;
+				iw4_mapEnts->trigger.hullCount = asset->numSubModels;
 
-			iw4_clipmap->dynEntDefList[0] = (IW4::DynEntityDef*)asset->dynEntDefList[0];
-			iw4_clipmap->dynEntDefList[1] = (IW4::DynEntityDef*)asset->dynEntDefList[1];
+				iw4_mapEnts->trigger.models = mem->Alloc<IW4::TriggerModel>(asset->numSubModels);
+				iw4_mapEnts->trigger.hulls = mem->Alloc<IW4::TriggerHull>(asset->numSubModels);
 
-			iw4_clipmap->dynEntPoseList[0] = (IW4::DynEntityPose*)asset->dynEntPoseList[0];
-			iw4_clipmap->dynEntPoseList[1] = (IW4::DynEntityPose*)asset->dynEntPoseList[1];
+				std::vector<IW4::TriggerSlab>* slabs = new std::vector<IW4::TriggerSlab>();
 
-			iw4_clipmap->dynEntClientList[0] = (IW4::DynEntityClient*)asset->dynEntClientList[0];
-			iw4_clipmap->dynEntClientList[1] = (IW4::DynEntityClient*)asset->dynEntClientList[1];
+				for (int i = 0; i < asset->numSubModels; ++i)
+				{
+					IW4::TriggerHull* trigHull = &iw4_mapEnts->trigger.hulls[i];
 
-			iw4_clipmap->dynEntCollList[0] = (IW4::DynEntityColl*)asset->dynEntCollList[0];
-			iw4_clipmap->dynEntCollList[1] = (IW4::DynEntityColl*)asset->dynEntCollList[1];
+					trigHull->bounds.compute(asset->cmodels[i].mins, asset->cmodels[i].maxs);
+					trigHull->contents = asset->cmodels[i].leaf.brushContents | asset->cmodels[i].leaf.terrainContents;
+
+					IW4::TriggerModel* trigMod = &iw4_mapEnts->trigger.models[i];
+					trigMod->hullCount = 1;
+					trigMod->firstHull = i;
+					trigMod->contents = asset->cmodels[i].leaf.brushContents | asset->cmodels[i].leaf.terrainContents;
+
+					auto* node = &asset->leafbrushNodes[asset->cmodels[i].leaf.leafBrushNode];
+					if (node->leafBrushCount)
+					{
+						for (short j = 0; j < node->leafBrushCount; ++j)
+						{
+							auto* brush = &asset->brushes[node->data.leaf.brushes[j]];
+
+							auto baseSlab = slabs->size();
+							for (unsigned int k = 0; k < brush->numsides; ++k)
+							{
+								IW4::TriggerSlab curSlab;
+								curSlab.dir[0] = brush->sides[k].plane->normal[0];
+								curSlab.dir[1] = brush->sides[k].plane->normal[1];
+								curSlab.dir[2] = brush->sides[k].plane->normal[2];
+								curSlab.halfSize = brush->sides[k].plane->dist;
+								curSlab.midPoint = 0.0f; // ??
+
+								slabs->push_back(curSlab);
+							}
+
+							trigHull->firstSlab = (unsigned short)baseSlab;
+							trigHull->slabCount = (unsigned short)(i - baseSlab);
+						}
+					}
+				}
+
+				iw4_mapEnts->trigger.slabs = mem->Alloc<IW4::TriggerSlab>(slabs->size());
+
+				// Save slabs
+				iw4_mapEnts->trigger.slabCount = slabs->size();
+				for (unsigned int i = 0; i < slabs->size(); i++)
+				{
+					IW4::TriggerSlab slab = (*slabs)[i];
+					std::memcpy(&iw4_mapEnts->trigger.slabs[i], &slab, sizeof(IW4::TriggerSlab));
+				}
+
+				delete slabs;
+			}
+
+			// dump triggers
+			AssetDumper trigger_dumper;
+			if (trigger_dumper.open(iw4_mapEnts->name + ".ents.triggers"s))
+			{
+				trigger_dumper.dump_int(iw4_mapEnts->trigger.modelCount);
+				trigger_dumper.dump_array<IW4::TriggerModel>(iw4_mapEnts->trigger.models, iw4_mapEnts->trigger.modelCount);
+
+				trigger_dumper.dump_int(iw4_mapEnts->trigger.hullCount);
+				trigger_dumper.dump_array<IW4::TriggerHull>(iw4_mapEnts->trigger.hulls, iw4_mapEnts->trigger.hullCount);
+
+				trigger_dumper.dump_int(iw4_mapEnts->trigger.slabCount);
+				trigger_dumper.dump_array<IW4::TriggerSlab>(iw4_mapEnts->trigger.slabs, iw4_mapEnts->trigger.slabCount);
+
+				trigger_dumper.close();
+			}
 			
+			// dynEnts
+			for (int i = 0; i < 2; i++)
+			{
+				iw4_clipmap->dynEntCount[i] = asset->dynEntCount[i];
+
+				if (iw4_clipmap->dynEntCount[i] <= 0)
+				{
+					continue;
+				}
+
+				iw4_clipmap->dynEntDefList[i] = mem->Alloc<IW4::DynEntityDef>(iw4_clipmap->dynEntCount[i]);
+				iw4_clipmap->dynEntPoseList[i] = mem->Alloc<IW4::DynEntityPose>(iw4_clipmap->dynEntCount[i]);
+				iw4_clipmap->dynEntClientList[i] = mem->Alloc<IW4::DynEntityClient>(iw4_clipmap->dynEntCount[i]);
+				iw4_clipmap->dynEntCollList[i] = mem->Alloc<IW4::DynEntityColl>(iw4_clipmap->dynEntCount[i]);
+
+				for (int j = 0; j < iw4_clipmap->dynEntCount[i]; j++)
+				{
+					iw4_clipmap->dynEntDefList[i][j].type = (IW4::DynEntityType)asset->dynEntDefList[i][j].type;
+					memcpy(&iw4_clipmap->dynEntDefList[i][j].pose, &asset->dynEntDefList[i][j].pose, sizeof(IW4::DynEntityPose));
+					iw4_clipmap->dynEntDefList[i][j].xModel = (IW4::XModel*)asset->dynEntDefList[i][j].xModel;
+					iw4_clipmap->dynEntDefList[i][j].brushModel = asset->dynEntDefList[i][j].brushModel;
+					iw4_clipmap->dynEntDefList[i][j].physicsBrushModel = asset->dynEntDefList[i][j].physicsBrushModel;
+					iw4_clipmap->dynEntDefList[i][j].destroyFx = (IW4::FxEffectDef*)asset->dynEntDefList[i][j].destroyFx;
+					iw4_clipmap->dynEntDefList[i][j].physPreset = (IW4::PhysPreset*)asset->dynEntDefList[i][j].physPreset;
+					iw4_clipmap->dynEntDefList[i][j].health = asset->dynEntDefList[i][j].health;
+					memcpy(&iw4_clipmap->dynEntDefList[i][j].mass, &asset->dynEntDefList[i][j].mass, sizeof(IW4::PhysMass));
+					iw4_clipmap->dynEntDefList[i][j].contents = asset->dynEntDefList[i][j].contents;
+
+					memcpy(&iw4_clipmap->dynEntPoseList[i][j], &asset->dynEntPoseList[i][j], sizeof(IW4::DynEntityPose));
+					memcpy(&iw4_clipmap->dynEntClientList[i][j], &asset->dynEntClientList[i][j], sizeof(IW4::DynEntityClient));
+					memcpy(&iw4_clipmap->dynEntCollList[i][j], &asset->dynEntCollList[i][j], sizeof(IW4::DynEntityColl));
+				}
+			}
+
 			iw4_clipmap->checksum = asset->checksum;
-
-			//iw4_clipmap->stageCount = 1;
-			//iw4_clipmap-> = mem->Alloc<IW4::Stage>();
-
 
 			IW4::IClipMap::dump(iw4_clipmap);
 		}

@@ -10,25 +10,15 @@
 
 namespace ZoneTool
 {
-	namespace IW5
+	namespace IW3
 	{
-		class ISound : public IAsset
+		class IFontDef : public IAsset
 		{
 		private:
 			std::string name_;
-			snd_alias_list_t* asset_ = nullptr;
-
-			static void write_soundfile(IZone* zone, ZoneBuffer* buf, SoundFile* dest);
-			static void write_head(IZone* zone, ZoneBuffer* buf, snd_alias_t* dest);
+			Font_s* asset_ = nullptr;
 
 		public:
-			static void json_parse_snd_alias(snd_alias_t* asset, nlohmann::json snddata, ZoneMemory* mem);
-			static snd_alias_list_t* json_parse(const std::string& name, ZoneMemory* mem);
-			static void json_dump_snd_alias(nlohmann::json& sound, snd_alias_t* asset);
-			static void json_dump(snd_alias_list_t* asset);
-
-			static snd_alias_list_t* parse(const std::string& name, ZoneMemory* mem);
-
 			void init(const std::string& name, ZoneMemory* mem) override;
 			void prepare(ZoneBuffer* buf, ZoneMemory* mem) override;
 			void load_depending(IZone* zone) override;
@@ -37,7 +27,8 @@ namespace ZoneTool
 			std::int32_t type() override;
 			void write(IZone* zone, ZoneBuffer* buffer) override;
 
-			static void dump(snd_alias_list_t* asset);
+			static void dump(Font_s* asset, ZoneMemory* mem);
+			static Font_s* parse(const std::string& name, ZoneMemory* mem);
 		};
 	}
 }

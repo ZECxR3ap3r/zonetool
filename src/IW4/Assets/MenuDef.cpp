@@ -369,6 +369,7 @@ namespace ZoneTool
 			emit_float("fadeInAmount", asset->fadeInAmount);
 			emit_float("blurWorld", asset->blurRadius);
 			emit_string("allowedBinding", asset->allowedBinding);
+			emit_string("soundLoop", asset->soundLoop);
 			emit_statement("visible when", asset->visibleExp);
 			emit_statement("exp rect x", asset->rectXExp);
 			emit_statement("exp rect y", asset->rectYExp);
@@ -403,6 +404,7 @@ namespace ZoneTool
 			emit_int("textalign", item->textAlignMode);
 			emit_float("textalignx", item->textAlignX);
 			emit_float("textaligny", item->textAlignY);
+			emit_int("textstyle", item->textStyle);
 			emit_float("textscale", item->textScale);
 			emit_color("glowColor", item->glowColor);
 			emit_bool("decodeEffect", item->decayActive);
@@ -568,7 +570,7 @@ namespace ZoneTool
 					emit_multi_def(data->multiDef);
 					break;
 				case ITEM_TYPE_DVARENUM:
-					fprintf(fp, "%s%s %s %s", get_tabs(), "dvar", "dvarEnumList", data->enumDvarName);
+					emit_string("dvarEnumList", data->enumDvarName);
 					break;
 				case ITEM_TYPE_NEWSTICKER:
 					emit_int("newsfeed", data->ticker->feedId);
@@ -785,7 +787,7 @@ namespace ZoneTool
 							switch (op)
 							{
 							case OP_STATICDVARINT:
-								command = "dvarstring";
+								command = "dvarint";
 								break;
 							case OP_STATICDVARBOOL:
 								command = "dvarbool";

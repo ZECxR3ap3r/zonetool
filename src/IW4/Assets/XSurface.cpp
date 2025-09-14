@@ -223,18 +223,13 @@ namespace ZoneTool
 			AssetDumper dump;
 			dump.open("XSurface\\"s + asset->name + ".xse");
 
-			if (asset->name == "tntbomb_mp_low10"s)
-			{
-				return;
-			}
-
 			dump.dump_array(asset, 1);
 			dump.dump_string(asset->name);
 
 			for (auto i = 0u; i < asset->numsurfs; i++)
 			{
 				dump.dump_int(asset->surfs[i].tileMode);
-				dump.dump_int(asset->surfs[i].deformed);
+				dump.dump_int(asset->surfs[i].deformed ? IW5::SurfaceFlags::SURF_FLAG_SKINNED : 0);
 				dump.dump_int(asset->surfs[i].baseTriIndex);
 				dump.dump_int(asset->surfs[i].baseVertIndex);
 

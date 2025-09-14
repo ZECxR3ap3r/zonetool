@@ -130,8 +130,11 @@ namespace ZoneTool
 
 			if (!this->asset_)
 			{
-				ZONETOOL_WARNING("Sound %s not found, it will probably sound like a motorboat ingame!", name.data());
 				this->asset_ = DB_FindXAssetHeader(this->type(), this->name().data(), 1).loadedsound;
+				if (DB_IsXAssetDefault(this->type(), this->name_.data()))
+				{
+					ZONETOOL_WARNING("Sound %s not found, it will probably sound like a motorboat ingame!", name.data());
+				}
 			}
 		}
 

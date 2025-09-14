@@ -36,11 +36,15 @@ namespace ZoneTool
 			static std::uint32_t db_hashmap[AssetEntries];
 
 			static std::unordered_map<std::string, XAsset> StoredAssets;
+			static std::vector<std::pair<XAssetType, std::string>> referencedAssets;
 
 			static std::unordered_map<std::int32_t, std::function<void*(void*)>> DuplicateAssetHandlers;
 
 			static bool verify;
 			static bool dump;
+
+			static std::string fastfile;
+			static FILE* csvFile;
 
 			typedef int (__cdecl * DB_GetXAssetSizeHandler_t)();
 			static DB_GetXAssetSizeHandler_t* DB_GetXAssetSizeHandlers;
@@ -69,6 +73,7 @@ namespace ZoneTool
 			static void AddXAsset(std::int32_t type, std::string name, void* pointer);
 			static void SetVerify(bool state);
 			static void SetDump(bool state);
+			static void StopDump();
 
 			AssetHandler();
 			~AssetHandler();

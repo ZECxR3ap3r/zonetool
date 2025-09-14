@@ -20,18 +20,13 @@ namespace ZoneTool
 			{
 				path = "techsets\\" + name + ".vertexshader";
 
-				if (!FileSystem::FileExists(path))
-				{
-					return nullptr;
-				}
-
 				AssetReader read(mem);
 				if (!read.open(path))
 				{
 					return nullptr;
 				}
 
-				ZONETOOL_INFO("Parsing vertexshader \"%s\"...", name.data());
+				//ZONETOOL_INFO("Parsing vertexshader \"%s\"...", name.data());
 
 				auto asset = read.read_array<VertexShader>();
 				asset->name = read.read_string();
@@ -41,9 +36,10 @@ namespace ZoneTool
 				return asset;
 			}
 
-			ZONETOOL_INFO("Parsing custom DirectX vertexshader \"%s\"...", name.data());
-
 			auto fp = FileSystem::FileOpen(path, "rb");
+			if (!fp) return nullptr;
+
+			ZONETOOL_INFO("Parsing custom DirectX vertexshader \"%s\"...", name.data());
 
 			auto asset = mem->Alloc<VertexShader>();
 			asset->name = mem->StrDup(name);
@@ -114,11 +110,6 @@ namespace ZoneTool
 
 		void IVertexShader::dump(VertexShader* asset)
 		{
-			if (FileSystem::FileExists("techsets\\"s + asset->name + ".vertexshader"s))
-			{
-				return;
-			}
-
 			AssetDumper write;
 			if (!write.open("techsets\\"s + asset->name + ".vertexshader"s))
 			{

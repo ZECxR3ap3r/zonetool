@@ -115,6 +115,379 @@ namespace ZoneTool
 		// Menus
 		struct MenuEventHandlerSet;
 		struct Statement_s;
+		struct menuDef_t;
+		struct Material;
+		struct snd_alias_list_t;
+
+		enum EventType
+		{
+			EVENT_UNCONDITIONAL = 0x0,
+			EVENT_IF = 0x1,
+			EVENT_ELSE = 0x2,
+			EVENT_SET_LOCAL_VAR_BOOL = 0x3,
+			EVENT_SET_LOCAL_VAR_INT = 0x4,
+			EVENT_SET_LOCAL_VAR_FLOAT = 0x5,
+			EVENT_SET_LOCAL_VAR_STRING = 0x6,
+			EVENT_COUNT = 0x7,
+		};
+
+		enum operationEnum
+		{
+			OP_NOOP,
+			OP_RIGHTPAREN,
+			OP_MULTIPLY,
+			OP_DIVIDE,
+			OP_MODULUS,
+			OP_ADD,
+			OP_SUBTRACT,
+			OP_NOT,
+			OP_LESSTHAN,
+			OP_LESSTHANEQUALTO,
+			OP_GREATERTHAN,
+			OP_GREATERTHANEQUALTO,
+			OP_EQUALS,
+			OP_NOTEQUAL,
+			OP_AND,
+			OP_OR,
+			OP_LEFTPAREN,
+			OP_COMMA,
+			OP_BITWISEAND,
+			OP_BITWISEOR,
+			OP_BITWISENOT,
+			OP_BITSHIFTLEFT,
+			OP_BITSHIFTRIGHT,
+			OP_FIRSTFUNCTIONCALL = 0x17,
+			OP_STATICDVARINT = 0x17,
+			OP_STATICDVARBOOL,
+			OP_STATICDVARFLOAT,
+			OP_STATICDVARSTRING,
+			OP_INT,
+			OP_STRING,
+			OP_FLOAT,
+			OP_SIN,
+			OP_COS,
+			OP_MIN,
+			OP_MAX,
+			OP_MILLISECONDS,
+			OP_LOCALCLIENTUIMILLISECONDS,
+			OP_DVARINT,
+			OP_DVARBOOL,
+			OP_DVARFLOAT,
+			OP_DVARSTRING,
+			OP_UI_ACTIVE,
+			OP_FLASHBANGED,
+			OP_USINGVEHICLE,
+			OP_MISSILECAM,
+			OP_SCOPED,
+			OP_SCOPEDTHERMAL,
+			OP_SCOREBOARD_VISIBLE,
+			OP_INKILLCAM,
+			OP_INKILLCAMNPC,
+			OP_PLAYER,
+			OP_GETPERK,
+			OP_SELECTING_LOCATION,
+			OP_SELECTING_DIRECTION,
+			OP_TEAM,
+			OP_OTHERTEAM,
+			OP_MARINESFIELD,
+			OP_OPFORFIELD,
+			OP_MENUISOPEN,
+			OP_WRITINGDATA,
+			OP_INLOBBY,
+			OP_INGAMELOBBY,
+			OP_INPRIVATEPARTY,
+			OP_INPRIVATEPARTYHOST,
+			OP_PRIVATEPARTYHOSTINLOBBY,
+			OP_ALONEINPARTY,
+			OP_ADSJAVELIN,
+			OP_WEAPLOCKBLINK,
+			OP_WEAPATTACKTOP,
+			OP_WEAPATTACKDIRECT,
+			OP_WEAPLOCKING,
+			OP_WEAPLOCKED,
+			OP_WEAPLOCKTOOCLOSE,
+			OP_WEAPLOCKSCREENPOSX,
+			OP_WEAPLOCKSCREENPOSY,
+			OP_SECONDSASTIME,
+			OP_TABLELOOKUP,
+			OP_TABLELOOKUPBYROW,
+			OP_TABLEGETROWNUM,
+			OP_LOCSTRING,
+			OP_LOCALVARINT,
+			OP_LOCALVARBOOL,
+			OP_LOCALVARFLOAT,
+			OP_LOCALVARSTRING,
+			OP_TIMELEFT,
+			OP_SECONDSASCOUNTDOWN,
+			OP_GAMEMSGWNDACTIVE,
+			OP_GAMETYPENAME,
+			OP_GAMETYPE,
+			OP_GAMETYPEDESCRIPTION,
+			OP_SCOREATRANK,
+			OP_SPECTATINGCLIENT,
+			OP_SPECTATINGFREE,
+			OP_KEYBINDING,
+			OP_ACTIONSLOTUSABLE,
+			OP_HUDFADE,
+			OP_MAXRECOMMENDEDPLAYERS,
+			OP_ACCEPTINGINVITE,
+			OP_ISINTERMISSION,
+			OP_GAMEHOST,
+			OP_PARTYISMISSINGMAPPACK,
+			OP_PARTYMISSINGMAPPACKERROR,
+			OP_ANYNEWMAPPACKS,
+			OP_AMISELECTED,
+			OP_PARTYSTATUSSTRING,
+			OP_ATTACHEDCONTROLLERCOUNT,
+			OP_ISSPLITSCREENONLINEPOSSIBLE,
+			OP_SPLITSCREENPLAYERCOUNT,
+			OP_GETPLAYERDATA,
+			OP_GETPLAYERDATASPLITSCREEN,
+			OP_GETMATCHRULESDATA,
+			OP_GETSAVEDMATCHRULESMETADATA,
+			OP_LEVELFOREXPERIENCEMP,
+			OP_LEVELFOREXPERIENCESO,
+			OP_ISITEMUNLOCKED,
+			OP_ISITEMUNLOCKEDSPLITSCREEN,
+			OP_ISCARDICONUNLOCKED,
+			OP_ISCARDTITLEUNLOCKED,
+			OP_ISCARDICONNEW,
+			OP_ISCARDTITLENEW,
+			OP_ISCARDICONUNLOCKEDSPLITSCREEN,
+			OP_ISCARDTITLEUNLOCKEDSPLITSCREEN,
+			OP_ISCARDICONNEWSPLITSCREEN,
+			OP_ISCARDTITLENEWSPLITSCREEN,
+			OP_ISPROFILEITEMUNLOCKED,
+			OP_ISPROFILEITEMUNLOCKEDSPLITSCREEN,
+			OP_ISPROFILEITEMNEW,
+			OP_ISPROFILEITEMNEWSPLITSCREEN,
+			OP_DEBUGPRINT,
+			OP_GETPLAYERDATAANYBOOLTRUE,
+			OP_GETPROFILEANYBOOLTRUE,
+			OP_WEAPONCLASSNEW,
+			OP_WEAPONNAME,
+			OP_ISRELOADING,
+			OP_SAVEGAMEAVAILABLE,
+			OP_UNLOCKEDITEMCOUNT,
+			OP_UNLOCKEDITEMCOUNTSPLITSCREEN,
+			OP_UNLOCKEDITEM,
+			OP_UNLOCKEDITEMSPLITSCREEN,
+			OP_RADARISJAMMED,
+			OP_RADARJAMINTENSITY,
+			OP_RADARISENABLED,
+			OP_ISEMPJAMMED,
+			OP_PLAYERADS,
+			OP_WEAPONHEATACTIVE,
+			OP_WEAPONHEATVALUE,
+			OP_WEAPONHEATOVERHEATED,
+			OP_GETSPLASHTEXT,
+			OP_GETSPLASHDESCRIPTION,
+			OP_GETSPLASHMATERIAL,
+			OP_SPLASHHASICON,
+			OP_SPLASHROWNUM,
+			OP_GETFOCUSEDITEMNAME,
+			OP_GETFOCUSEDITEMX,
+			OP_GETFOCUSEDITEMY,
+			OP_GETFOCUSEDITEMWIDTH,
+			OP_GETFOCUSEDITEMHEIGHT,
+			OP_GETITEMX,
+			OP_GETITEMY,
+			OP_GETITEMWIDTH,
+			OP_GETITEMHEIGHT,
+			OP_PLAYLIST,
+			OP_SCOREBOARDEXTERNALMUTENOTICE,
+			OP_GETCLIENTMATCHDATA,
+			OP_GETCLIENTMATCHDATADEF,
+			OP_GETMAPNAME,
+			OP_GETMAPIMAGE,
+			OP_GETMAPCUSTOM,
+			OP_GETMIGRATIONSTATUS,
+			OP_GETPLAYERCARDINFO,
+			OP_ISOFFLINEPROFILESELECTED,
+			OP_COOPPLAYER,
+			OP_ISCOOP,
+			OP_GETPARTYSTATUS,
+			OP_GETSEARCHPARAMS,
+			OP_GETTIMEPLAYED,
+			OP_ISSELECTEDPLAYERFRIEND,
+			OP_GETCHARBYINDEX,
+			OP_GETPROFILEDATA,
+			OP_GETPROFILEDATASPLITSCREEN,
+			OP_ISPROFILESIGNEDIN,
+			OP_GETWAITPOPUPSTATUS,
+			OP_GETNATTYPE,
+			OP_GETLOCALIZEDNATTYPE,
+			OP_GETADJUSTEDSAFEAREAHORIZONTAL,
+			OP_GETADJUSTEDSAFEAREAVERTICAL,
+			OP_CONNECTIONINFO,
+			OP_OFFLINEPROFILECANSAVE,
+			OP_USERWITHOUTOFFLINEPROFILEWARNING,
+			OP_ALLSPLITSCREENPROFILESCANSAVE,
+			OP_ALLSPLITSCREENPROFILESARESIGNEDIN,
+			OP_DOWEHAVEMAPPACK,
+			OP_MAYINVITEPLAYERTOPARTY,
+			OP_GETPATCHNOTES,
+			OP_GETGAMEINFOS,
+			OP_COOPREADY,
+			OP_VOTECAST,
+			OP_VOTEPASSED,
+			OP_GETMAPVOTEMAPIMAGE,
+			OP_GETMAPVOTEMAPNAME,
+			OP_MAPVOTEGAMETYPENAME,
+			OP_ISFRIENDINVITABLE,
+			OP_ISFRIENDJOINABLE,
+			OP_GETSORTEDCHALLENGEINDEX,
+			OP_GETSORTEDCHALLENGENAME,
+			OP_GETSORTEDCHALLENGECOUNT,
+			OP_GETFILTERCHALLENGECOUNT,
+			OP_GETFILTERCHALLENGELOCKEDCOUNT,
+			OP_GETFILTERCHALLENGECOMPLETECOUNT,
+			OP_ISSORTEDCHALLENGETIERED,
+			OP_GETCHALLENGEFILTERCACHECOUNT,
+			OP_GETCHALLENGEFILTERCACHECOMPLETECOUNT,
+			OP_ISCOOPSEARCHING,
+			OP_COOPSHOWPUBLICTYPE,
+			OP_COOPDISPLAYABLEGROUPNUM,
+			OP_COOPHASREQUIREDONLINEFILES,
+			OP_GETTEXTWIDTH,
+			OP_GETTEXTHEIGHT,
+			OP_ISDEVELOPER,
+			OP_ISUSINGAIRBURST,
+			OP_GETAIRBURSTMETERS,
+			OP_GETCROSSHAIRTRACEMETERS,
+			OP_GETFACEBOOKSTATUSTEXT,
+			OP_ISFACEBOOKLOGGEDIN,
+			OP_ISFACEBOOKCHECKING,
+			OP_ISFACEBOOKALLOWED,
+			OP_GETPRIVATEPARTYSTATUS,
+			OP_INCLUDEDINMAPROTATION,
+			OP_SELECT,
+			OP_ISDEMOPLAYING,
+			OP_GETUSERGROUPTEXT,
+			OP_GETUSERGROUPCOMMONINTERESTTOTAL,
+			OP_ISDEMOFOLLOWCAMERA,
+			OP_ISDEMOFREECAMERA,
+			OP_ISDEMOCAPTURINGSCREENSHOT,
+			OP_ISPARTYHOSTWAITINGONMEMBERS,
+			OP_ISPOPUPPARTYMEMBERAWAY,
+			OP_ISSELECTEDPARTYMEMBERAWAY,
+			OP_GETTIME,
+			OP_GAMEENDTIME,
+			OP_HASFOCUS,
+			OP_MENUHASFOCUS,
+			OP_GETDEMOSEGMENTCOUNT,
+			OP_GETDEMOSEGMENTINFORMATION,
+			OP_ISCLIPMODIFIED,
+			OP_ISUSINGMATCHRULESDATA,
+			OP_ISGUEST,
+			OP_GETFACEBOOKHELPTEXT,
+			OP_ISELITECLANALLOWED,
+			OP_ISENTITLEMENTSALLOWED,
+			OP_ISUSERGROUPSALLOWED,
+			OP_ISWAITINGFORONLINESERVICES,
+			OP_GETTEXTWIDTHMODCASE,
+			OP_GETSAVESCREENTITLE,
+			OP_GETSAVESCREENDESCRIPTION,
+			OP_GETONLINEVAULTSELECTEDITEMDATA,
+			OP_ISONLINEVAULTRESTRICTED,
+			OP_ISCONTENTSERVERTASKINPROGRESS,
+			OP_GETCONTENTSERVERTASKPROGRESS,
+			OP_GETRECENTGAMESSELECTEDITEMDATA,
+			OP_GAMETYPENAMEABBREVIATED,
+			OP_MAPVOTEGAMETYPENAMEABBREVIATED,
+			OP_ISUSERSIGNEDINTOLIVE,
+			OP_USERCANPLAYONLINE,
+			OP_GETPASTTITLERANK,
+			OP_GETFEEDERDATA,
+			OP_PARTYCLIENTSUPTODATE,
+			OP_TRUNCATETEXTWITHELLIPSIS,
+			OP_UISTARTED,
+			OP_CANRENDERCLIP,
+			OP_GETPREVIEWMAPCUSTOM,
+			OP_GETDLCMAPSAVAILABLECOUNT,
+			OP_ISUSERSIGNEDIN,
+			OP_ISUSINGINTERMISSIONTIMER,
+			OP_ISUSINGCUSTOMMAPROTATION,
+			OP_MENUISTOPMOST,
+			OP_FACEBOOK_ISPLATFROMFRIEND,
+			OP_ELITECLAN_ISPLATFROMFRIEND,
+			OP_ELITECLAN_ISME,
+			OP_ELITECLAN_ISLEADER,
+			OP_ISUSERSIGNEDINFORVAULT,
+			OP_GETUSINGMATCHRULESDATA,
+			OP_CANUSERACCESSONLINEVAULT,
+			OP_FRIEND_GETGAMERTAG,
+			OP_RECENTPLAYER_GETGAMERTAG,
+			OP_LIVEPARTY_GETGAMERTAG,
+			OP_FACEBOOK_GETGAMERTAG,
+			OP_ELITECLAN_GETGAMERTAG,
+			OP_LIVEPARTY_ISME,
+			OP_LIVEPARTY_ISLOCAL,
+			OP_DOUBLECLICKWASRIGHTCLICK,
+			OP_ISDEMOCLIPRECORDING,
+			OP_GETINDEXFROMSTRING,
+			OP_GETSTRINGWITHOUTINDEX,
+			OP_ELITECLAN_GETNAME,
+			OP_ELITECLAN_GETHELP,
+			OP_ELITECLAN_GETMOTD,
+			OP_ELITECLAN_ISMEMBER,
+			OP_ELITECLAN_ISEMBLEM_OK,
+			OP_FACEBOOK_FRIENDS_SHOW_NEXT,
+			OP_FACEBOOK_FRIENDS_SHOW_PREV,
+			OP_GETONLINEVAULTFRIENDGAMERTAG,
+			OP_GETOBJECTIVELISTHEIGHT,
+			OP_ISCLIENTDEMOENABLED,
+			OP_ISUSERSIGNEDINTODEMONWARE,
+			OP_CUSTOMCLASSISRESTRICTED,
+			OP_WEAPONISRESTRICTED,
+			OP_ANYSPLITSCREENPROFILESARESIGNEDIN,
+			OP_ISGUESTSPLITSCREEN,
+			OP_ISITEMUNLOCKEDBYCLIENT,
+			OP_ISANYUSERSIGNEDINTOLIVE,
+			OP_GETPASTTITLEPRESTIGE,
+			OP_SPLITSCREENACTIVEGAMEPADCOUNT,
+			OP_SHOWFRIENDPLAYERCARD,
+			OP_GETFRIENDPLAYERCARDPRESENCE,
+			OP_SHOWRECENTPLAYERGROUPICON,
+			OP_GETWRAPPEDTEXTHEIGHT,
+			OP_CANCLIENTSAVE,
+			OP_GETGAMEINVITESCOUNT,
+			OP_ISSPLITSCREENGAMERLIVEENABLED,
+			OP_SO_COOPSHOWCOMMONGROUPICON,
+			OP_STRIPCOLORSFROMSTRING,
+			OP_DEPRECATED,
+			OP_ISCHALLENGEPERIODIC,
+			OP_GETCHALLENGEDATA,
+			OP_ISELITEAPPPRESENT,
+			OP_ELITECLAN_SELECTEDISME,
+			OP_ENOUGHSTORAGESPACEFORCLIENTDEMO,
+			OP_ISUSERSIGNEDINFORCOMMERCE,
+			OP_GETFACEBOOKMENUTEXT,
+			OP_GETFACEBOOKISPOSTING,
+			OP_MEETPLAYER_ISPLATFORMFRIEND,
+			OP_ISSELECTEDPLAYERGUEST,
+			OP_GETSPLITSCREENCONTROLLERCLIENTNUM,
+			OP_ISCLIENTDEMOENABLEDSPLITSCREEN,
+			OP_ITEMCANTAKEFOCUS,
+			OP_GETTIMESINCELASTDOUBLECLICK,
+			OP_ISSERVERLISTREFRESHING,
+			OP_ISRECIPENAMEVALID,
+			OP_RECIPEEXISTS,
+			OP_GETFACEBOOKOPTIONSHELPTEXT,
+			OP_DOWEHAVEALLAVAILABLEMAPPACKS,
+			OP_ISTHERENEWELITEITEMS,
+			OP_ISPAYINGSUBSCRIBER,
+			OP_LOCALUSER_ISMISSINGMAPPACK,
+			OP_LOCALUSER_MISSINGMAPPACKERROR,
+			OP_GETFIRSTSPECOPSDLCMAP,
+			OP_LOCALUSER_MISSINGMAPNAME,
+			OP_SHOWSTORENEW,
+			OP_COMMERCE_GETSTATUS,
+			OP_ISMANIFESTDOWNLOADED,
+			OP_AREALLITEMSUNLOCKED,
+			OP_COMMERCE_GETSTATUSCOND,
+			OP_DOWEHAVEMISSINGOWNEDCONTENT
+		};
 
 		struct UIFunctionList
 		{
@@ -180,7 +553,7 @@ namespace ZoneTool
 
 		union entryInternalData
 		{
-			int op;
+			operationEnum op;
 			Operand operand;
 		};
 
@@ -230,7 +603,7 @@ namespace ZoneTool
 		struct MenuEventHandler
 		{
 			EventData eventData;
-			char eventType;
+			EventType eventType;
 		};
 #pragma pack(pop)
 
@@ -279,7 +652,7 @@ namespace ZoneTool
 			float borderColor[4];
 			float outlineColor[4];
 			float disableColor[4];
-			void* background;
+			Material* background;
 		};
 
 		enum ItemFloatExpressionTarget
@@ -343,9 +716,10 @@ namespace ZoneTool
 			int alignment;
 		};
 
-		// TODO: 4 bytes missing somewhere
+		// TODO: 4 bytes missing somewhere -->( added mousePos ) not sure if correct
 		struct listBoxDef_s
 		{
+			int mousePos; // is this correct?
 			int startPos[1];
 			int endPos[1];
 			int drawPadding;
@@ -359,7 +733,7 @@ namespace ZoneTool
 			int noScrollBars;
 			int usePaging;
 			float selectBorder[4];
-			void* selectIcon;
+			Material* selectIcon;
 			Statement_s* elementHeightExp;
 		};
 
@@ -413,7 +787,7 @@ namespace ZoneTool
 			int gameMsgWindowMode;
 			const char* text;
 			int itemFlags;
-			void* parent;
+			menuDef_t* parent;
 			MenuEventHandlerSet* mouseEnterText;
 			MenuEventHandlerSet* mouseExitText;
 			MenuEventHandlerSet* mouseEnter;
@@ -429,7 +803,7 @@ namespace ZoneTool
 			const char* enableDvar;
 			const char* localVar;
 			int dvarFlags;
-			void* focusSound;
+			snd_alias_list_t* focusSound;
 			float special;
 			int cursorPos;
 			itemDefData_t typeData;
@@ -807,11 +1181,19 @@ namespace ZoneTool
 			XSurfaceCTEntry* entry;
 		};
 
+		enum SurfaceFlags : std::int32_t
+		{
+			SURF_FLAG_VERTCOL_GREY = 0x8,
+			SURF_FLAG_VERTCOL_NONE = 0x10,
+			SURF_FLAG_QUANTIZED = 0x20,
+			SURF_FLAG_SKINNED = 0x40,
+		};
+
 #pragma pack(push, 4)
 		struct XSurface
 		{
 			char tileMode; // +0
-			bool deformed; // +1			
+			char deformed; // +1			
 			unsigned short vertCount; // +2
 			unsigned short triCount; // +4
 			unsigned char streamHandle; // +6
@@ -1171,9 +1553,94 @@ namespace ZoneTool
 		struct SoundFile // 0x10
 		{
 			char type;
-			char _pad[2];
 			bool exists;
+			char _pad[2];
 			SoundData sound;
+		};
+
+		enum SoundChannel : std::uint32_t
+		{
+			SND_CHANNEL_PHYSICS,
+			SND_CHANNEL_AMBDIST1,
+			SND_CHANNEL_AMBDIST2,
+			SND_CHANNEL_ALARM,
+			SND_CHANNEL_AUTO,
+			SND_CHANNEL_AUTO2,
+			SND_CHANNEL_AUTO2D,
+			SND_CHANNEL_AUTODOG,
+			SND_CHANNEL_EXPLOSIONDIST1,
+			SND_CHANNEL_EXPLOSIONDIST2,
+			SND_CHANNEL_EXPLOSIVEIMPACT,
+			SND_CHANNEL_ELEMENT,
+			SND_CHANNEL_ELEMENT_INT,
+			SND_CHANNEL_ELEMENT_EXT,
+			SND_CHANNEL_BULLETIMPACT,
+			SND_CHANNEL_BULLETFLESH1,
+			SND_CHANNEL_BULLETFLESH2,
+			SND_CHANNEL_BULLETWHIZBY,
+			SND_CHANNEL_VEHICLE,
+			SND_CHANNEL_VEHICLELIMITED,
+			SND_CHANNEL_MENU,
+			SND_CHANNEL_BODY,
+			SND_CHANNEL_BODY2D,
+			SND_CHANNEL_RELOAD,
+			SND_CHANNEL_RELOAD2D,
+			SND_CHANNEL_ITEM,
+			SND_CHANNEL_EXPLOSION1,
+			SND_CHANNEL_EXPLOSION2,
+			SND_CHANNEL_EXPLOSION3,
+			SND_CHANNEL_EXPLOSION4,
+			SND_CHANNEL_EXPLOSION5,
+			SND_CHANNEL_EFFECTS1,
+			SND_CHANNEL_EFFECTS2,
+			SND_CHANNEL_EFFECTS3,
+			SND_CHANNEL_EFFECTS2D1,
+			SND_CHANNEL_EFFECTS2D2,
+			SND_CHANNEL_NORESTRICT,
+			SND_CHANNEL_NORESTRICT2D,
+			SND_CHANNEL_AIRCRAFT,
+			SND_CHANNEL_VEHICLE2D,
+			SND_CHANNEL_WEAPON_DIST,
+			SND_CHANNEL_WEAPON_MID,
+			SND_CHANNEL_WEAPON,
+			SND_CHANNEL_WEAPON2D,
+			SND_CHANNEL_NONSHOCK,
+			SND_CHANNEL_NONSHOCK2,
+			SND_CHANNEL_GRONDO3D,
+			SND_CHANNEL_GRONDO2D,
+			SND_CHANNEL_VOICE,
+			SND_CHANNEL_LOCAL,
+			SND_CHANNEL_LOCAL2,
+			SND_CHANNEL_LOCAL3,
+			SND_CHANNEL_AMBIENT,
+			SND_CHANNEL_HURT,
+			SND_CHANNEL_PLAYER1,
+			SND_CHANNEL_PLAYER2,
+			SND_CHANNEL_MUSIC,
+			SND_CHANNEL_MUSICNOPAUSE,
+			SND_CHANNEL_MISSION,
+			SND_CHANNEL_CRITICAL,
+			SND_CHANNEL_ANNOUNCER,
+			SND_CHANNEL_SHELLSHOCK,
+
+			SND_CHANNEL_COUNT
+		};
+
+		union SoundAliasFlags
+		{
+			struct
+			{
+				unsigned int looping : 1;
+				unsigned int isMaster : 1;
+				unsigned int isSlave : 1;
+				unsigned int fullDryLevel : 1;
+				unsigned int noWetLevel : 1;
+				unsigned int unknown1 : 1;
+				unsigned int unknown2 : 1;
+				unsigned int type : 2;
+				unsigned int channel : 7;
+			};
+			unsigned int intValue;
 		};
 
 #pragma pack(push, 4)
@@ -1795,7 +2262,7 @@ namespace ZoneTool
 		{
 			float pos[2];
 			float normal[2];
-			float texCoord[2];
+			float texCoord;
 
 			Json ToJson()
 			{
@@ -1803,7 +2270,7 @@ namespace ZoneTool
 
 				JSON_FIELD_ARR(pos, 2);
 				JSON_FIELD_ARR(normal, 2);
-				JSON_FIELD_ARR(texCoord, 2);
+				JSON_FIELD(texCoord);
 
 				return data;
 			}
@@ -2273,6 +2740,7 @@ namespace ZoneTool
 
 			DynEntityHingeDef* hinge;
 			PhysMass mass;
+			int contents;
 		};
 
 		struct DynEntityPose
@@ -3137,10 +3605,12 @@ namespace ZoneTool
 			std::uint32_t indexCount; // 4
 			std::uint32_t skyCount; // 4
 			GfxSky* skies; // 4
-			std::uint32_t sunPrimaryLightIndex; // 4 // = 32
-			std::uint32_t primaryLightCount; // 4
-			std::uint32_t primaryLightEnvCount; // 4
-			char unknown1[12]; // 16 // = 56 // Sortkeys. Don't know which ones though
+			std::uint32_t lastSunPrimaryLightIndex;
+			std::uint32_t primaryLightCount;
+			std::uint32_t sortKeyLitDecal;
+			std::uint32_t sortKeyEffectDecal;
+			std::uint32_t sortKeyEffectAuto;
+			std::uint32_t sortKeyDistortion;
 			GfxWorldDpvsPlanes dpvsPlanes; // 16
 			GfxCellTreeCount* aabbTreeCounts; // Size: 4 * dpvsPlanes.cellCount // 4
 			GfxCellTree* aabbTree; // 4
@@ -3741,42 +4211,90 @@ namespace ZoneTool
 			short* notetrackSoundMapValues;
 		};
 
-		struct AttachmentDefUnk
+#pragma pack(push, 4)
+		enum AttachmentType : std::int32_t
 		{
-			char _pad1[16];
-			TracerDef* tracer;
-			char _pad2[4];
+			ATTACHMENT_SCOPE = 0x0,
+			ATTACHMENT_UNDERBARREL = 0x1,
+			ATTACHMENT_OTHER = 0x2,
+			ATTACHMENT_COUNT = 0x3,
 		};
+
+		enum weapType_t : std::int32_t
+		{
+			WEAPTYPE_NONE = 0x0,
+			WEAPTYPE_BULLET = 0x1,
+			WEAPTYPE_GRENADE = 0x2,
+			WEAPTYPE_PROJECTILE = 0x3,
+			WEAPTYPE_RIOTSHIELD = 0x4,
+			WEAPTYPE_NUM = 0x5,
+		};
+
+		enum weapClass_t : std::int32_t
+		{
+			WEAPCLASS_RIFLE = 0x0,
+			WEAPCLASS_SNIPER = 0x1,
+			WEAPCLASS_MG = 0x2,
+			WEAPCLASS_SMG = 0x3,
+			WEAPCLASS_SPREAD = 0x4,
+			WEAPCLASS_PISTOL = 0x5,
+			WEAPCLASS_GRENADE = 0x6,
+			WEAPCLASS_ROCKETLAUNCHER = 0x7,
+			WEAPCLASS_TURRET = 0x8,
+			WEAPCLASS_THROWINGKNIFE = 0x9,
+			WEAPCLASS_NON_PLAYER = 0xA,
+			WEAPCLASS_ITEM = 0xB,
+			WEAPCLASS_NUM = 0xC,
+		};
+
+		enum PenetrateType : std::int32_t
+		{
+			PENETRATE_TYPE_NONE = 0x0,
+			PENETRATE_TYPE_SMALL = 0x1,
+			PENETRATE_TYPE_MEDIUM = 0x2,
+			PENETRATE_TYPE_LARGE = 0x3,
+			PENETRATE_TYPE_COUNT = 0x4,
+		};
+
+		enum ImpactType : std::int32_t
+		{
+			IMPACT_TYPE_NONE = 0x0,
+			IMPACT_TYPE_BULLET_SMALL = 0x1,
+			IMPACT_TYPE_BULLET_LARGE = 0x2,
+			IMPACT_TYPE_BULLET_AP = 0x3,
+			IMPACT_TYPE_BULLET_EXPLODE = 0x4,
+			IMPACT_TYPE_SHOTGUN = 0x5,
+			IMPACT_TYPE_SHOTGUN_EXPLODE = 0x6,
+			IMPACT_TYPE_GRENADE_BOUNCE = 0x7,
+			IMPACT_TYPE_GRENADE_EXPLODE = 0x8,
+			IMPACT_TYPE_ROCKET_EXPLODE = 0x9,
+			IMPACT_TYPE_PROJECTILE_DUD = 0xA,
+			IMPACT_TYPE_COUNT = 0xB,
+		};
+
+		enum weapFireType_t : std::int32_t
+		{
+			WEAPON_FIRETYPE_FULLAUTO = 0x0,
+			WEAPON_FIRETYPE_SINGLESHOT = 0x1,
+			WEAPON_FIRETYPE_BURSTFIRE2 = 0x2,
+			WEAPON_FIRETYPE_BURSTFIRE3 = 0x3,
+			WEAPON_FIRETYPE_BURSTFIRE4 = 0x4,
+			WEAPON_FIRETYPE_DOUBLEBARREL = 0x5,
+			WEAPON_FIRETYPECOUNT = 0x6,
+			WEAPON_FIRETYPE_BURSTFIRE_FIRST = 0x2,
+			WEAPON_FIRETYPE_BURSTFIRE_LAST = 0x4,
+		};
+
 
 		struct AttAmmoGeneral
 		{
-			std::int32_t penetrateType;
+			PenetrateType penetrateType;
 			float penetrateMultiplier;
-			std::int32_t impactType;
-			std::int32_t fireType;
+			ImpactType impactType;
+			weapFireType_t fireType;
 			TracerDef* tracerType;
 			bool rifleBullet;
 			bool armorPiercing;
-			char pad[2];
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(penetrateType);
-				JSON_FIELD(penetrateMultiplier);
-				JSON_FIELD(impactType);
-				JSON_FIELD(fireType);
-				JSON_ASSET(tracerType, TracerDef);
-				JSON_FIELD(rifleBullet);
-				JSON_FIELD(armorPiercing);
-
-				return data;
-			}
 		};
 
 		struct AttSight
@@ -3788,75 +4306,24 @@ namespace ZoneTool
 			bool canHoldBreath;
 			bool canVariableZoom;
 			bool hideRailWithThisScope;
-			// bool useScopeDrift;
-			// bool useDualFOV;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(aimDownSight);
-				JSON_FIELD(adsFire);
-				JSON_FIELD(rechamberWhileAds);
-				JSON_FIELD(noAdsWhenMagEmpty);
-				JSON_FIELD(canHoldBreath);
-				JSON_FIELD(canVariableZoom);
-				JSON_FIELD(hideRailWithThisScope);
-
-				return data;
-			}
 		};
 
 		struct AttReload
 		{
 			bool noPartialReload;
 			bool segmentedReload;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(noPartialReload);
-				JSON_FIELD(segmentedReload);
-
-				return data;
-			}
 		};
 
 		struct AttAddOns
 		{
 			bool motionTracker;
 			bool silenced;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(motionTracker);
-				JSON_FIELD(silenced);
-
-				return data;
-			}
 		};
 
 		struct AttGeneral
 		{
 			bool boltAction;
 			bool inheritsPerks;
-			bool reticleSpin45;
-			char pad[1];
 			float enemyCrosshairRange;
 			Material* reticleCenter;
 			Material* reticleSide;
@@ -3864,28 +4331,13 @@ namespace ZoneTool
 			int reticleSideSize;
 			float moveSpeedScale;
 			float adsMoveSpeedScale;
+		};
 
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(boltAction);
-				JSON_FIELD(inheritsPerks);
-				JSON_FIELD(reticleSpin45);
-				JSON_FIELD(enemyCrosshairRange);
-				JSON_ASSET(reticleCenter, Material);
-				JSON_ASSET(reticleSide, Material);
-				JSON_FIELD(reticleCenterSize);
-				JSON_FIELD(reticleSideSize);
-				JSON_FIELD(moveSpeedScale);
-				JSON_FIELD(adsMoveSpeedScale);
-
-				return data;
-			}
+		struct AttAimAssist
+		{
+			float autoAimRange;
+			float aimAssistRange;
+			float aimAssistRangeAds;
 		};
 
 		struct AttAmmunition
@@ -3893,21 +4345,9 @@ namespace ZoneTool
 			int maxAmmo;
 			int startAmmo;
 			int clipSize;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(maxAmmo);
-				JSON_FIELD(startAmmo);
-				JSON_FIELD(clipSize);
-
-				return data;
-			}
+			int shotCount;
+			int reloadAmmoAdd;
+			int reloadStartAdd;
 		};
 
 		struct AttDamage
@@ -3919,25 +4359,6 @@ namespace ZoneTool
 			float minDamageRange;
 			int playerDamage;
 			int minPlayerDamage;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(damage);
-				JSON_FIELD(minDamage);
-				JSON_FIELD(meleeDamage);
-				JSON_FIELD(maxDamageRange);
-				JSON_FIELD(minDamageRange);
-				JSON_FIELD(playerDamage);
-				JSON_FIELD(minPlayerDamage);
-
-				return data;
-			}
 		};
 
 		struct AttLocationDamage
@@ -3961,37 +4382,6 @@ namespace ZoneTool
 			float locLeftLegLower;
 			float locLeftFoot;
 			float locGun;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(locNone);
-				JSON_FIELD(locHelmet);
-				JSON_FIELD(locHead);
-				JSON_FIELD(locNeck);
-				JSON_FIELD(locTorsoUpper);
-				JSON_FIELD(locTorsoLower);
-				JSON_FIELD(locRightArmUpper);
-				JSON_FIELD(locRightArmLower);
-				JSON_FIELD(locRightHand);
-				JSON_FIELD(locLeftArmUpper);
-				JSON_FIELD(locLeftArmLower);
-				JSON_FIELD(locLeftHand);
-				JSON_FIELD(locRightLegUpper);
-				JSON_FIELD(locRightLegLower);
-				JSON_FIELD(locRightFoot);
-				JSON_FIELD(locLeftLegUpper);
-				JSON_FIELD(locLeftLegLower);
-				JSON_FIELD(locLeftFoot);
-				JSON_FIELD(locGun);
-
-				return data;
-			}
 		};
 
 		struct AttIdleSettings
@@ -4002,24 +4392,6 @@ namespace ZoneTool
 			float idleProneFactor;
 			float adsIdleLerpStartTime;
 			float adsIdleLerpTime;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(hipIdleAmount);
-				JSON_FIELD(hipIdleSpeed);
-				JSON_FIELD(idleCrouchFactor);
-				JSON_FIELD(idleProneFactor);
-				JSON_FIELD(adsIdleLerpStartTime);
-				JSON_FIELD(adsIdleLerpTime);
-
-				return data;
-			}
 		};
 
 		struct AttADSSettings
@@ -4034,66 +4406,10 @@ namespace ZoneTool
 			float adsZoomFov;
 			float adsZoomInFrac;
 			float adsZoomOutFrac;
-			float adsFovLerpTime;
-			// float adsBobFactor;
-			// float adsViewBobMult;
-			float adsFireRateScale;
-			float adsDamageRangeScale;
-			float adsFireAnimFrac;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(adsSpread);
-				JSON_FIELD(adsAimPitch);
-				JSON_FIELD(adsTransInTime);
-				JSON_FIELD(adsTransOutTime);
-				JSON_FIELD(adsReloadTransTime);
-				JSON_FIELD(adsCrosshairInFrac);
-				JSON_FIELD(adsCrosshairOutFrac);
-				JSON_FIELD(adsZoomFov);
-				JSON_FIELD(adsZoomInFrac);
-				JSON_FIELD(adsZoomOutFrac);
-				JSON_FIELD(adsFovLerpTime);
-				JSON_FIELD(adsFireRateScale);
-				JSON_FIELD(adsDamageRangeScale);
-				JSON_FIELD(adsFireAnimFrac);
-
-				return data;
-			}
-		};
-
-		struct AttScopeDriftSettings
-		{
-			float fScopeDriftDelay;
-			float fScopeDriftLerpInTime;
-			float fScopeDriftSteadyTime;
-			float fScopeDriftLerpOutTime;
-			float fScopeDriftSteadyFactor;
-			float fScopeDriftUnsteadyFactor;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(fScopeDriftDelay);
-				JSON_FIELD(fScopeDriftLerpInTime);
-				JSON_FIELD(fScopeDriftSteadyTime);
-				JSON_FIELD(fScopeDriftLerpOutTime);
-				JSON_FIELD(fScopeDriftSteadyFactor);
-				JSON_FIELD(fScopeDriftUnsteadyFactor);
-
-				return data;
-			}
+			float adsBobFactor;
+			float adsViewBobMult;
+			float adsViewErrorMin;
+			float adsViewErrorMax;
 		};
 
 		struct AttHipSpread
@@ -4110,30 +4426,6 @@ namespace ZoneTool
 			float hipSpreadDecayRate;
 			float hipSpreadDuckedDecay;
 			float hipSpreadProneDecay;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(hipSpreadStandMin);
-				JSON_FIELD(hipSpreadDuckedMin);
-				JSON_FIELD(hipSpreadProneMin);
-				JSON_FIELD(hipSpreadMax);
-				JSON_FIELD(hipSpreadDuckedMax);
-				JSON_FIELD(hipSpreadProneMax);
-				JSON_FIELD(hipSpreadFireAdd);
-				JSON_FIELD(hipSpreadTurnAdd);
-				JSON_FIELD(hipSpreadMoveAdd);
-				JSON_FIELD(hipSpreadDecayRate);
-				JSON_FIELD(hipSpreadDuckedDecay);
-				JSON_FIELD(hipSpreadProneDecay);
-
-				return data;
-			}
 		};
 
 		struct AttGunKick
@@ -4144,7 +4436,6 @@ namespace ZoneTool
 			float hipGunKickPitchMax;
 			float hipGunKickYawMin;
 			float hipGunKickYawMax;
-			// float hipGunKickMagMin;
 			float hipGunKickAccel;
 			float hipGunKickSpeedMax;
 			float hipGunKickSpeedDecay;
@@ -4155,43 +4446,10 @@ namespace ZoneTool
 			float adsGunKickPitchMax;
 			float adsGunKickYawMin;
 			float adsGunKickYawMax;
-			// float adsGunKickMagMin;
 			float adsGunKickAccel;
 			float adsGunKickSpeedMax;
 			float adsGunKickSpeedDecay;
 			float adsGunKickStaticDecay;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(hipGunKickReducedKickBullets);
-				JSON_FIELD(hipGunKickReducedKickPercent);
-				JSON_FIELD(hipGunKickPitchMin);
-				JSON_FIELD(hipGunKickPitchMax);
-				JSON_FIELD(hipGunKickYawMin);
-				JSON_FIELD(hipGunKickYawMax);
-				JSON_FIELD(hipGunKickAccel);
-				JSON_FIELD(hipGunKickSpeedMax);
-				JSON_FIELD(hipGunKickSpeedDecay);
-				JSON_FIELD(hipGunKickStaticDecay);
-				JSON_FIELD(adsGunKickReducedKickBullets);
-				JSON_FIELD(adsGunKickReducedKickPercent);
-				JSON_FIELD(adsGunKickPitchMin);
-				JSON_FIELD(adsGunKickPitchMax);
-				JSON_FIELD(adsGunKickYawMin);
-				JSON_FIELD(adsGunKickYawMax);
-				JSON_FIELD(adsGunKickAccel);
-				JSON_FIELD(adsGunKickSpeedMax);
-				JSON_FIELD(adsGunKickSpeedDecay);
-				JSON_FIELD(adsGunKickStaticDecay);
-
-				return data;
-			}
 		};
 
 		struct AttViewKick
@@ -4200,66 +4458,18 @@ namespace ZoneTool
 			float hipViewKickPitchMax;
 			float hipViewKickYawMin;
 			float hipViewKickYawMax;
-			// float hipViewKickMagMin;
 			float hipViewKickCenterSpeed;
 			float adsViewKickPitchMin;
 			float adsViewKickPitchMax;
 			float adsViewKickYawMin;
 			float adsViewKickYawMax;
-			// float adsViewKickMagMin;
 			float adsViewKickCenterSpeed;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(hipViewKickPitchMin);
-				JSON_FIELD(hipViewKickPitchMax);
-				JSON_FIELD(hipViewKickYawMin);
-				JSON_FIELD(hipViewKickYawMax);
-				JSON_FIELD(hipViewKickCenterSpeed);
-				JSON_FIELD(adsViewKickPitchMin);
-				JSON_FIELD(adsViewKickPitchMax);
-				JSON_FIELD(adsViewKickYawMin);
-				JSON_FIELD(adsViewKickYawMax);
-				JSON_FIELD(adsViewKickCenterSpeed);
-
-				return data;
-			}
 		};
 
-		struct AttADSOverlay
+		struct __declspec(align(4)) AttADSOverlay
 		{
 			ADSOverlay overlay;
-			bool hybridToggle;
 			bool thermalScope;
-			bool thermalToggle;
-			bool outlineEnemies;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_ASSET(overlay.shader, Material);
-				JSON_ASSET(overlay.shaderLowRes, Material);
-				JSON_ASSET(overlay.shaderEMP, Material);
-				JSON_ASSET(overlay.shaderEMPLowRes, Material);
-
-				JSON_FIELD(hybridToggle);
-				JSON_FIELD(thermalScope);
-				JSON_FIELD(thermalToggle);
-				JSON_FIELD(outlineEnemies);
-
-				return data;
-			}
 		};
 
 		struct AttUI
@@ -4269,44 +4479,12 @@ namespace ZoneTool
 			weaponIconRatioType_t dpadIconRatio;
 			weaponIconRatioType_t ammoCounterIconRatio;
 			ammoCounterClipType_t ammoCounterClip;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_ASSET(dpadIcon, Material);
-				JSON_ASSET(ammoCounterIcon, Material);
-
-				JSON_FIELD(dpadIconRatio);
-				JSON_FIELD(ammoCounterIconRatio);
-				JSON_FIELD(ammoCounterClip);
-
-				return data;
-			}
 		};
 
 		struct AttRumbles
 		{
 			const char* fireRumble;
 			const char* meleeImpactRumble;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_STRING(fireRumble);
-				JSON_STRING(meleeImpactRumble);
-
-				return data;
-			}
 		};
 
 		struct AttProjectile
@@ -4320,15 +4498,13 @@ namespace ZoneTool
 			int projectileActivateDist;
 			float projectileLifetime;
 			XModel* projectileModel;
-			int projExplosionType;
+			weapProjExplosion_t projExplosionType;
 			FxEffectDef* projExplosionEffect;
 			bool projExplosionEffectForceNormalUp;
-			char pad1[3];
 			snd_alias_list_t* projExplosionSound;
 			FxEffectDef* projDudEffect;
 			snd_alias_list_t* projDudSound;
 			bool projImpactExplode;
-			char pad2[3];
 			float destabilizationRateTime;
 			float destabilizationCurvatureMax;
 			int destabilizeDistance;
@@ -4336,52 +4512,15 @@ namespace ZoneTool
 			int projIgnitionDelay;
 			FxEffectDef* projIgnitionEffect;
 			snd_alias_list_t* projIgnitionSound;
-
-			void Parse(Json& data, ZoneMemory* mem)
-			{
-			}
-
-			Json ToJson()
-			{
-				Json data;
-
-				/*JSON_ASSET(projectileModel, XModel);
-
-				JSON_ASSET(projExplosionSound, snd_alias_list_t);
-				JSON_ASSET(projDudSound, snd_alias_list_t);
-				JSON_ASSET(projIgnitionSound, snd_alias_list_t);
-
-				JSON_ASSET(projExplosionEffect, FxEffectDef);
-				JSON_ASSET(projDudEffect, FxEffectDef);
-				JSON_ASSET(projTrailEffect, FxEffectDef);
-				JSON_ASSET(projIgnitionEffect, FxEffectDef);*/
-
-				JSON_FIELD(explosionRadius);
-				JSON_FIELD(explosionInnerDamage);
-				JSON_FIELD(explosionOuterDamage);
-				JSON_FIELD(damageConeAngle);
-				JSON_FIELD(projectileSpeed);
-				JSON_FIELD(projectileSpeedUp);
-				JSON_FIELD(projectileActivateDist);
-				JSON_FIELD(projectileLifetime);
-				JSON_FIELD(projExplosionEffectForceNormalUp);
-				JSON_FIELD(projImpactExplode);
-				JSON_FIELD(destabilizationRateTime);
-				JSON_FIELD(destabilizationCurvatureMax);
-				JSON_FIELD(destabilizeDistance);
-				JSON_FIELD(projIgnitionDelay);
-
-				return data;
-			}
 		};
 
 		struct AttachmentDef
 		{
 			const char* szInternalName;
 			const char* szDisplayName;
-			std::int32_t type;
-			std::int32_t weaponType;
-			std::int32_t weapClass;
+			AttachmentType type;
+			weapType_t weaponType;
+			weapClass_t weapClass;
 			XModel** worldModels;
 			XModel** viewModels;
 			XModel** reticleViewModels;
@@ -4390,11 +4529,11 @@ namespace ZoneTool
 			AttReload* reload;
 			AttAddOns* addOns;
 			AttGeneral* general;
+			AttAimAssist* aimAssist;
 			AttAmmunition* ammunition;
-			AttIdleSettings* idleSettings;
 			AttDamage* damage;
 			AttLocationDamage* locationDamage;
-			AttScopeDriftSettings* scopeDriftSettings;
+			AttIdleSettings* idleSettings;
 			AttADSSettings* adsSettings;
 			AttADSSettings* adsSettingsMain;
 			AttHipSpread* hipSpread;
@@ -4419,8 +4558,8 @@ namespace ZoneTool
 			int loadIndex;
 			bool hideIronSightsWithThisAttachment;
 			bool shareAmmoWithAlt;
-			char pad[2];
 		};
+#pragma pack(pop)
 
 #pragma pack(push, 4)
 		struct WeaponCompleteDef
@@ -4764,6 +4903,7 @@ namespace ZoneTool
 			LoadedSound* loadedsound;
 			StructuredDataDefSet* structureddatadef;
 			menuDef_t* menu;
+			MenuList* menuList;
 			GfxLightDef* lightdef;
 			void* data;
 		};

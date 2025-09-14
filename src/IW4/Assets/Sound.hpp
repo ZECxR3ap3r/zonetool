@@ -8,6 +8,8 @@
 // ========================================================
 #pragma once
 
+#include "../IW5/Structs.hpp"
+
 namespace ZoneTool
 {
 	namespace IW4
@@ -22,6 +24,9 @@ namespace ZoneTool
 			static void write_head(IZone* zone, ZoneBuffer* buf, snd_alias_t* dest);
 
 		public:
+			static IW5::SoundChannel channel_to_iw5(IW4::SoundChannel snd_channel);
+			static IW4::SoundChannel channel_to_iw4(IW5::SoundChannel snd_channel);
+
 			static snd_alias_list_t* parse(const std::string& name, ZoneMemory* mem);
 
 			void init(const std::string& name, ZoneMemory* mem) override;

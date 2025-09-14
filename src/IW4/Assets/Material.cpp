@@ -65,7 +65,9 @@ namespace ZoneTool
 	for (int i = 0; i < size; i++) \
 	{ \
 		nlohmann::json cent##entry; \
-		cent##entry["name"] = asset->entry[i].name; \
+		std::string name = asset->constantTable[i].name; \
+		name.resize(12); \
+		cent##entry["name"] = name.data(); \
 		cent##entry["nameHash"] = asset->entry[i].nameHash; \
 		nlohmann::json centliteral##entry; \
 		centliteral##entry[0] = asset->entry[i].literal[0]; \
@@ -226,12 +228,78 @@ namespace ZoneTool
 				mat[i].typeHash = matdata[i]["typeHash"].get<unsigned int>();
 
 				std::string img = matdata[i]["image"].get<std::string>();
-				mat[i].image = Image_Parse(img.data(), mat[i].semantic, 0, 0, mem);
 
 				if (img.empty())
 				{
 					MessageBoxA(nullptr, &va("Image name for material %s seems to be empty!", &material[0])[0], nullptr,
 						0);
+				}
+
+				if (mat[i].semantic == 11)
+				{
+					ZONETOOL_INFO("Parsing waterdata for material \"%s\"...", material.data());
+
+					mat[i].image = reinterpret_cast<GfxImage*>(mem->Alloc<water_t>());
+					water_t* waterData = reinterpret_cast<water_t*>(mat[i].image);
+
+					if (matdata[i]["waterinfo"].is_null())
+					{
+						ZONETOOL_FATAL("Waterdata for material: %s, image %s is null!", material.data(), img.data());
+					}
+
+					waterData->writable.floatTime = matdata[i]["waterinfo"]["floatTime"].get<float>();
+					waterData->codeConstant[0] = matdata[i]["waterinfo"]["codeConstant"][0].get<float>();
+					waterData->codeConstant[1] = matdata[i]["waterinfo"]["codeConstant"][1].get<float>();
+					waterData->codeConstant[2] = matdata[i]["waterinfo"]["codeConstant"][2].get<float>();
+					waterData->codeConstant[3] = matdata[i]["waterinfo"]["codeConstant"][3].get<float>();
+					waterData->M = matdata[i]["waterinfo"]["M"].get<int>();
+					waterData->N = matdata[i]["waterinfo"]["N"].get<int>();
+					waterData->Lx = matdata[i]["waterinfo"]["Lx"].get<float>();
+					waterData->Lz = matdata[i]["waterinfo"]["Lz"].get<float>();
+					waterData->gravity = matdata[i]["waterinfo"]["gravity"].get<float>();
+					waterData->windvel = matdata[i]["waterinfo"]["windvel"].get<float>();
+					waterData->winddir[0] = matdata[i]["waterinfo"]["winddir"][0].get<float>();
+					waterData->winddir[1] = matdata[i]["waterinfo"]["winddir"][1].get<float>();
+					waterData->amplitude = matdata[i]["waterinfo"]["amplitude"].get<float>();
+
+					if (!matdata[i]["waterinfo"]["complex"].is_null())
+					{
+						waterData->H0 = mem->Alloc<complex_s>(waterData->M * waterData->N);
+						for (int j = 0; j < waterData->M * waterData->N; j++)
+						{
+							waterData->H0[j].real = matdata[i]["waterinfo"]["complex"][j]["real"].get<float>();
+							waterData->H0[j].imag = matdata[i]["waterinfo"]["complex"][j]["imag"].get<float>();
+						}
+					}
+					if (!matdata[i]["waterinfo"]["wTerm"].is_null())
+					{
+						waterData->wTerm = mem->Alloc<float>(waterData->M * waterData->N);
+						for (int j = 0; j < waterData->M * waterData->N; j++)
+						{
+							waterData->wTerm[j] = matdata[i]["waterinfo"]["wTerm"][j].get<float>();
+						}
+					}
+
+					waterData->image = mem->Alloc<GfxImage>();
+					waterData->image->name = strdup(img.data());
+					waterData->image->mapType = 3;
+					waterData->image->semantic = 11;
+					waterData->image->category = 5;
+
+					waterData->image->dataLen1 = 5461;
+					waterData->image->dataLen2 = 5461;
+					waterData->image->height = 64;
+					waterData->image->width = 64;
+					waterData->image->depth = 1;
+					waterData->image->loaded = true;
+
+					waterData->image->texture = mem->Alloc<GfxImageLoadDef>();
+					waterData->image->texture->format = 50;
+					waterData->image->texture->texture = (char*)0xff3b3b3b;
+				}
+				else
+				{
+					mat[i].image = Image_Parse(img.data(), mat[i].semantic, 0, 0, mem);
 				}
 			}
 
@@ -373,14 +441,44 @@ namespace ZoneTool
 			if (data->techniqueSet)
 			{
 				zone->add_asset_of_type(techset, data->techniqueSet->name);
+
+				// add shadow techset
+				std::string techset_name = data->techniqueSet->name;
+				auto offset = techset_name.find("_sm_");
+				if (offset != std::string::npos)
+				{
+					std::string shadow_techset_name = std::string(techset_name.begin(), techset_name.begin() + offset);
+					shadow_techset_name.append("_hsm_" + std::string(techset_name.begin() + offset + 4, techset_name.end()));
+
+					if (FileSystem::FileExists("techsets\\" + shadow_techset_name + ".techset"))
+					{
+						zone->add_asset_of_type(techset, shadow_techset_name);
+					}
+					else
+					{
+						ZONETOOL_WARNING("Could not find shadow techset '%s' for techset '%s'", shadow_techset_name.data(), techset_name.data());
+					}
+				}
 			}
 
 			for (char i = 0; i < data->numMaps; i++)
 			{
-				if (data->maps[i].image)
+				if (data->maps[i].semantic == 11)
 				{
-					// use pointer rather than name here
-					zone->add_asset_of_type_by_pointer(image, data->maps[i].image);
+					water_t* waterData = reinterpret_cast<water_t*>(data->maps[i].image);
+					if (waterData->image)
+					{
+						// use pointer rather than name here
+						zone->add_asset_of_type_by_pointer(image, waterData->image);
+					}
+				}
+				else
+				{
+					if (data->maps[i].image)
+					{
+						// use pointer rather than name here
+						zone->add_asset_of_type_by_pointer(image, data->maps[i].image);
+					}
 				}
 			}
 		}
@@ -421,16 +519,32 @@ namespace ZoneTool
 				{
 					if (data->maps[i].semantic == 11)
 					{
-						ZONETOOL_ERROR("Watermaps are not supported.");
-						destmaps[i].image = nullptr;
-					}
-					else
-					{
-						if (data->maps[i].image)
+						water_t* waterData = reinterpret_cast<water_t*>(data->maps[i].image);
+						buf->align(3);
+						auto destwater = buf->write(waterData);
+						if (waterData->H0)
 						{
-							destmaps[i].image = reinterpret_cast<GfxImage*>(zone->get_asset_pointer(
-								image, data->maps[i].image->name));
+							buf->align(3);
+							buf->write(waterData->H0, waterData->M * waterData->N);
+							ZoneBuffer::clear_pointer(&destwater->H0);
 						}
+						if (waterData->wTerm)
+						{
+							buf->align(3);
+							buf->write(waterData->wTerm, waterData->M * waterData->N);
+							ZoneBuffer::clear_pointer(&destwater->wTerm);
+						}
+						if (waterData->image)
+						{
+							destwater->image = reinterpret_cast<GfxImage*>(zone->get_asset_pointer(
+								image, waterData->image->name));
+						}
+						ZoneBuffer::clear_pointer(&destmaps->image);
+					}
+					else if (data->maps[i].image)
+					{
+						destmaps[i].image = reinterpret_cast<GfxImage*>(zone->get_asset_pointer(
+							image, data->maps[i].image->name));
 					}
 				}
 
@@ -515,15 +629,10 @@ namespace ZoneTool
 
 					for (int i = 0; i < waterData->M * waterData->N; i++)
 					{
-						nlohmann::json complexdata;
-						nlohmann::json curWTerm;
+						waterComplexData[i]["real"] = waterData->H0[i].real;
+						waterComplexData[i]["imag"] = waterData->H0[i].imag;
 
-						complexdata["real"] = waterData->H0[i].real;
-						complexdata["imag"] = waterData->H0[i].imag;
-
-						curWTerm[i] = waterData->wTerm[i];
-
-						waterComplexData[i] = complexdata;
+						wTerm[i] = waterData->wTerm[i];
 					}
 
 					waterdata["complex"] = waterComplexData;

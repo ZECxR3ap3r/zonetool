@@ -61,7 +61,7 @@ namespace ZoneTool
 			~Zone();
 
 			IAsset* find_asset(std::int32_t type, const std::string& name) override;
-			void* Zone::get_asset_pointer(std::int32_t type, const std::string& name) override;
+			void* get_asset_pointer(std::int32_t type, const std::string& name) override;
 
 			void add_asset_of_type_by_pointer(std::int32_t type, void* pointer) override;
 

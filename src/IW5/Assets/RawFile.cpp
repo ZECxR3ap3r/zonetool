@@ -19,6 +19,8 @@ namespace ZoneTool
 		{
 			if (FileSystem::FileExists(name))
 			{
+				ZONETOOL_INFO("Parsing rawfile \"%s\"...", name.data());
+
 				auto* rawfile = mem->Alloc<RawFile>();
 				rawfile->name = mem->StrDup(name);
 
@@ -33,11 +35,11 @@ namespace ZoneTool
 
 					rawfile->len = size;
 					rawfile->compressedLen = compressed.size();
-					rawfile->buffer = mem->Alloc<char>(size);
+					rawfile->buffer = mem->Alloc<char>(compressed.size());
 					memcpy(
 						const_cast<char*>(rawfile->buffer),
 						compressed.data(),
-						size);
+						compressed.size());
 
 					FileSystem::FileClose(file);
 				}

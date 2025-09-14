@@ -22,7 +22,7 @@ namespace ZoneTool
 				return nullptr;
 			}
 
-			ZONETOOL_INFO("Parsing vertexdecl \"%s\"...", name.data());
+			//ZONETOOL_INFO("Parsing vertexdecl \"%s\"...", name.data());
 
 			auto asset = read.read_array<VertexDecl>();
 			asset->name = read.read_string();
@@ -81,11 +81,6 @@ namespace ZoneTool
 
 		void IVertexDecl::dump(VertexDecl* asset)
 		{
-			if (FileSystem::FileExists("techsets\\"s + asset->name + ".vertexdecl"s))
-			{
-				return;
-			}
-
 			AssetDumper write;
 			if (!write.open("techsets\\"s + asset->name + ".vertexdecl"s))
 			{

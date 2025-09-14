@@ -12,10 +12,52 @@ namespace ZoneTool
 {
 	namespace IW5
 	{
+		LocalizeEntry* ILocalizeEntry::parse(const std::string& name, ZoneMemory* mem)
+		{
+			const auto path = "localizedstrings/" + name;
+
+			if (FileSystem::FileExists(path))
+			{
+				ZONETOOL_INFO("Parsing localized string \"%s\"...", name.c_str());
+
+				auto* localized = mem->Alloc<LocalizeEntry>();
+				localized->name = mem->StrDup(name);
+
+				auto* file = FileSystem::FileOpen(path, "rb"s);
+				if (file)
+				{
+					const auto size = FileSystem::FileSize(file);
+					auto data = FileSystem::ReadBytes(file, size);
+					localized->localizedString = mem->StrDup(std::string(data.begin(), data.end()));
+
+					FileSystem::FileClose(file);
+				}
+				return localized;
+			}
+
+			return nullptr;
+		}
+
 		void ILocalizeEntry::init(const std::string& name, ZoneMemory* mem)
 		{
 			this->name_ = name;
-			this->asset_ = DB_FindXAssetHeader(this->type(), this->name().data(), 1).localize;
+			this->asset_ = parse(name, mem);
+
+			if (!this->asset_)
+			{
+				this->asset_ = DB_FindXAssetHeader(this->type(), this->name().data(), 1).localize;
+			}
+		}
+
+		void ILocalizeEntry::init(void* asset, ZoneMemory* mem)
+		{
+			this->asset_ = reinterpret_cast<LocalizeEntry*>(asset);
+			this->name_ = this->asset_->name;
+
+			if (!this->asset_)
+			{
+				this->asset_ = DB_FindXAssetHeader(this->type(), this->name().data(), 1).localize;
+			}
 		}
 
 		void ILocalizeEntry::prepare(ZoneBuffer* buf, ZoneMemory* mem)
@@ -41,8 +83,6 @@ namespace ZoneTool
 			auto data = this->asset_;
 			auto dest = buf->write(data);
 
-			sizeof LocalizeEntry;
-
 			buf->push_stream(3);
 			START_LOG_STREAM;
 
@@ -55,6 +95,15 @@ namespace ZoneTool
 
 		void ILocalizeEntry::dump(LocalizeEntry* asset)
 		{
+			if (asset)
+			{
+				auto* file = FileSystem::FileOpen("localizedstrings/"s + asset->name, "wb");
+				if (file)
+				{
+					fwrite(asset->localizedString, strlen(asset->localizedString), 1, file);
+					FileSystem::FileClose(file);
+				}
+			}
 		}
 	}
 }

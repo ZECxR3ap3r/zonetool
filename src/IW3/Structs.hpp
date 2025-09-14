@@ -1463,6 +1463,28 @@ namespace ZoneTool
 			int contents;
 		};
 
+		struct DynEntityPose
+		{
+			GfxPlacement pose;
+			float radius;
+		};
+
+		struct DynEntityClient
+		{
+			int physObjId;
+			unsigned __int16 flags;
+			unsigned __int16 lightingHandle;
+			int health;
+		};
+
+		struct DynEntityColl
+		{
+			unsigned __int16 sector;
+			unsigned __int16 nextEntInSector;
+			float linkMins[2];
+			float linkMaxs[2];
+		};
+
 		struct clipMap_t
 		{
 			const char* name;
@@ -1511,12 +1533,9 @@ namespace ZoneTool
 			cmodel_t box_model;
 			unsigned __int16 dynEntCount[2];
 			DynEntityDef* dynEntDefList[2];
-			/*DynEntityPose*/
-			void* dynEntPoseList[2];
-			/*DynEntityClient*/
-			void* dynEntClientList[2];
-			/*DynEntityColl*/
-			void* dynEntCollList[2];
+			DynEntityPose* dynEntPoseList[2];
+			DynEntityClient* dynEntClientList[2];
+			DynEntityColl* dynEntCollList[2];
 			unsigned int checksum;
 		};
 
@@ -1849,6 +1868,59 @@ namespace ZoneTool
 			bool exists;
 			SoundData sound;
 		};
+		enum SoundChannel : std::uint32_t
+		{
+			SND_CHANNEL_PHYSICS,
+			SND_CHANNEL_AUTO,
+			SND_CHANNEL_AUTO2,
+			SND_CHANNEL_AUTODOG,
+			SND_CHANNEL_BULLETIMPACT,
+			SND_CHANNEL_BULLETWHIZBY,
+			SND_CHANNEL_ELEMENT,
+			SND_CHANNEL_AUTO2D,
+			SND_CHANNEL_VEHICLE,
+			SND_CHANNEL_VEHICLELIMITED,
+			SND_CHANNEL_MENU,
+			SND_CHANNEL_BODY,
+			SND_CHANNEL_BODY2D,
+			SND_CHANNEL_RELOAD,
+			SND_CHANNEL_RELOAD2D,
+			SND_CHANNEL_ITEM,
+			SND_CHANNEL_EFFECTS1,
+			SND_CHANNEL_EFFECTS2,
+			SND_CHANNEL_WEAPON,
+			SND_CHANNEL_WEAPON2D,
+			SND_CHANNEL_NONSHOCK,
+			SND_CHANNEL_VOICE,
+			SND_CHANNEL_LOCAL,
+			SND_CHANNEL_LOCAL2,
+			SND_CHANNEL_AMBIENT,
+			SND_CHANNEL_HURT,
+			SND_CHANNEL_PLAYER1,
+			SND_CHANNEL_PLAYER2,
+			SND_CHANNEL_MUSIC,
+			SND_CHANNEL_MUSICNOPAUSE,
+			SND_CHANNEL_MISSION,
+			SND_CHANNEL_ANNOUNCER,
+			SND_CHANNEL_SHELLSHOCK,
+
+			SND_CHANNEL_COUNT
+		};
+		union SoundAliasFlags
+		{
+			struct
+			{
+				unsigned int looping : 1;
+				unsigned int isMaster : 1;
+				unsigned int isSlave : 1;
+				unsigned int fullDryLevel : 1;
+				unsigned int noWetLevel : 1;
+				unsigned int unknown1 : 1;
+				unsigned int type : 2;
+				unsigned int channel : 6;
+			};
+			unsigned int intValue;
+		};
 #pragma pack(push, 4)
 		struct SndCurve
 		{
@@ -1890,6 +1962,33 @@ namespace ZoneTool
 			int count;
 		};
 
+#pragma pack(pop)
+		struct Glyph
+		{
+			unsigned __int16 letter;
+			char x0;
+			char y0;
+			char dx;
+			char pixelWidth;
+			char pixelHeight;
+			float s0;
+			float t0;
+			float s1;
+			float t1;
+		};
+
+#pragma pack(pop)
+		/* 1003 */
+		struct Font_s
+		{
+			const char* fontName;
+			int pixelHeight;
+			int glyphCount;
+			Material* material;
+			Material* glowMaterial;
+			Glyph* glyphs;
+		};
+
 		union XAssetHeader
 		{
 			void* data;
@@ -1909,13 +2008,14 @@ namespace ZoneTool
 			ComWorld* com_map;
 			// 			GameWorldSp *gameWorldSp;
 			GameWorldMp* gameWorldMp;
+			GameWorldMp* game_map_mp;
 			MapEnts* mapEnts;
 			MapEnts* map_ents;
 			GfxWorld* gfxWorld;
 			GfxWorld* gfx_map;
 			GfxLightDef* lightDef;
 			LoadedSound* loaded_sound;
-			// 			Font_s *font;
+			Font_s *font;
 			// 			MenuList *menuList;
 			// 			menuDef_t *menu;
 			// 			LocalizeEntry *localize;

@@ -20,12 +20,20 @@ namespace ZoneTool
 
 		public:
 			void init(const std::string& name, ZoneMemory* mem) override;
+			void init(void* ptr, ZoneMemory* mem) override;
 			void prepare(ZoneBuffer* buf, ZoneMemory* mem) override;
 			void load_depending(IZone* zone) override;
 
 			std::string name() override;
 			std::int32_t type() override;
+			void write_menu_statement(IZone* zone, ZoneBuffer* buf, Statement_s* data);
+			void write_menu_eventhandlerset(IZone* zone, ZoneBuffer* buf, MenuEventHandlerSet* data);
+			void write_menu_itemkeyhandler(IZone* zone, ZoneBuffer* buf, ItemKeyHandler* data);
 			void write_menu_data(IZone* zone, ZoneBuffer* buf, menuData_t* data);
+			void write_menu_window(IZone* zone, ZoneBuffer* buf, windowDef_t* data, windowDef_t* dest);
+			void write_menu_defdata(IZone* zone, ZoneBuffer* buf, itemDefData_t* data, int type);
+			void write_menu_floatexpressions(IZone* zone, ZoneBuffer* buf, ItemFloatExpression* data, int count);
+			void write_menu_item(IZone* zone, ZoneBuffer* buf, itemDef_t* data);
 			void write(IZone* zone, ZoneBuffer* buffer) override;
 
 			static void dump(menuDef_t* asset);

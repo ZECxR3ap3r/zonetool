@@ -30,7 +30,7 @@ namespace ZoneTool
 				return nullptr;
 			}
 
-			ZONETOOL_INFO("Parsing technique \"%s\"...", name.data());
+			//ZONETOOL_INFO("Parsing technique \"%s\"...", name.data());
 
 			const auto header = reader.read_single<MaterialTechniqueHeader>();
 			const auto passes = reader.read_array<MaterialPass>();
@@ -81,10 +81,6 @@ namespace ZoneTool
 		                                      ZoneMemory* mem)
 		{
 			const auto path = "techsets\\" + name + ".techset";
-			if (!FileSystem::FileExists(path))
-			{
-				return nullptr;
-			}
 
 			AssetReader reader(mem);
 			if (!reader.open(path))

@@ -146,35 +146,32 @@ namespace ZoneTool
 
 				if (data[surf].rigidVertLists)
 				{
-					XRigidVertList* ct = nullptr;
-					dest[surf].rigidVertLists = buf->write_s(3, data[surf].rigidVertLists, data[surf].vertListCount,
-					                                         sizeof XRigidVertList, &ct);
-
-					if (dest[surf].rigidVertLists == reinterpret_cast<XRigidVertList*>(-1))
+					buf->align(3);
+					dest[surf].rigidVertLists = buf->write(data[surf].rigidVertLists, data[surf].vertListCount);
+					for (auto vert = 0; vert < data[surf].vertListCount; vert++)
 					{
-						for (auto k = 0; k < data[surf].vertListCount; k++)
+						if (data[surf].rigidVertLists[vert].collisionTree)
 						{
-							if (ct[k].collisionTree)
+							buf->align(3);
+							dest[surf].rigidVertLists[vert].collisionTree = buf->write(data[surf].rigidVertLists[vert].collisionTree);
+
+							if (data[surf].rigidVertLists[vert].collisionTree->nodes)
 							{
-								XSurfaceCollisionTree* entry = nullptr;
-								ct[k].collisionTree = buf->write_s(3, ct[k].collisionTree, 1,
-								                                   sizeof XSurfaceCollisionTree, &entry);
-
-								if (ct[k].collisionTree == reinterpret_cast<XSurfaceCollisionTree*>(-1))
-								{
-									if (entry->nodes)
-									{
-										entry->nodes = buf->write_s(15, entry->nodes, entry->nodeCount);
-									}
-
-									if (entry->leafs)
-									{
-										entry->leafs = buf->write_s(1, entry->leafs, entry->leafCount);
-									}
-								}
+								buf->align(15);
+								buf->write(data[surf].rigidVertLists[vert].collisionTree->nodes, data[surf].rigidVertLists[vert].collisionTree->nodeCount);
+								ZoneBuffer::clear_pointer(&dest[surf].rigidVertLists[vert].collisionTree->nodes);
 							}
+
+							if (data[surf].rigidVertLists[vert].collisionTree->leafs)
+							{
+								buf->align(1);
+								buf->write(data[surf].rigidVertLists[vert].collisionTree->leafs, data[surf].rigidVertLists[vert].collisionTree->leafCount);
+								ZoneBuffer::clear_pointer(&dest[surf].rigidVertLists[vert].collisionTree->leafs);
+							}
+							ZoneBuffer::clear_pointer(&dest[surf].rigidVertLists[vert].collisionTree);
 						}
 					}
+					ZoneBuffer::clear_pointer(&dest[surf].rigidVertLists);
 				}
 
 				buf->push_stream(7);

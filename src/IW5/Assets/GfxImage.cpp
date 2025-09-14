@@ -20,6 +20,16 @@ namespace ZoneTool
 		{
 		}
 
+		bool is_map_image(const std::string& name)
+		{
+			return (name.size() >= 6)
+				? ((name.substr(0, 6) == "*light" || name.substr(0, 6) == "*refle" ||
+					name == "$outdoor")
+					? true
+					: false)
+				: false;
+		}
+
 		std::string IGfxImage::clean_name(const std::string& name)
 		{
 			auto newName = name;
@@ -106,12 +116,7 @@ namespace ZoneTool
 		{
 			this->name_ = name;
 			this->asset_ = this->parse(name, mem);
-			this->isMapImage = (this->name_.size() >= 6)
-				                   ? ((this->name_.substr(0, 6) == "*light" || this->name_.substr(0, 6) == "*refle" ||
-					                      this->name_ == "$outdoor")
-					                      ? true
-					                      : false)
-				                   : false;
+			this->isMapImage = is_map_image(this->name_);
 
 			if (!this->asset_)
 			{
@@ -123,12 +128,7 @@ namespace ZoneTool
 		{
 			this->asset_ = reinterpret_cast<GfxImage*>(asset);
 			this->name_ = this->asset_->name;
-			this->isMapImage = (this->name_.size() >= 6)
-				                   ? ((this->name_.substr(0, 6) == "*light" || this->name_.substr(0, 6) == "*refle" ||
-					                      this->name_ == "$outdoor")
-					                      ? true
-					                      : false)
-				                   : false;
+			this->isMapImage = is_map_image(this->name_);
 
 			auto parsed = this->parse(this->name_, mem);
 			if (parsed)
@@ -230,9 +230,26 @@ namespace ZoneTool
 						{
 							const auto version = bytes[3];
 
-							if (version != 8 && version != 9)
+							if (version != 8)
 							{
-								if (version == 6)
+								if (version == 9)
+								{
+									constexpr auto iw5_header_size = sizeof(GfxImageFileHeader);
+
+									ZONETOOL_INFO("Converting IWI %s from version %u to version %u...", name.data(), version, 8);
+
+									// generate iw5 header
+									GfxImageFileHeader header = {};
+									memcpy(&header, &bytes[0], sizeof GfxImageFileHeader);
+									header.version = 8;
+
+									// write header
+									fwrite(&header, iw5_header_size, 1, fp);
+
+									// write image buffer
+									fwrite(&bytes[iw5_header_size], bytes.size() - iw5_header_size, 1, fp);
+								}
+								else if (version == 6)
 								{
 									constexpr auto iw5_header_size = sizeof(GfxImageFileHeader);
 									constexpr auto iw3_header_size = sizeof(IW3_GfxImageFileHeader);
@@ -276,13 +293,14 @@ namespace ZoneTool
 									
 									// write iw3 image buffer
 									fwrite(&bytes[iw3_header_size], bytes.size() - iw3_header_size, 1, fp);
-									fclose(fp);
 								}
 								else
 								{
 									ZONETOOL_FATAL("IWI of version %u is not supported for conversion. IWI file was %s.", version, name.data());
 								}
 
+								fclose(origfp);
+								fclose(fp);
 								return;
 							}
 						}
@@ -390,7 +408,7 @@ namespace ZoneTool
 
 		void IGfxImage::dump(GfxImage* asset)
 		{
-			if (asset->texture && asset->texture->dataSize)
+			if (asset->texture && asset->texture->dataSize && is_map_image(asset->name))
 			{
 				char* newName = ClearAssetName((char*)asset->name);
 				auto fp = FileSystem::FileOpen("images/"s + newName + ".ffImg"s, "wb");

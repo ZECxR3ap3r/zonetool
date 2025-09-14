@@ -149,6 +149,7 @@ namespace ZoneTool
 			map.draw.vertexLayerDataSize = world->vertexLayerDataSize;
 			memcpy(&map.draw.vld, &world->vld, sizeof world->vld);
 			map.draw.indexCount = world->indexCount;
+			map.draw.indices = world->indices;
 
 			// Split reflection images and probes
 			if (world->reflectionProbes)
@@ -169,6 +170,25 @@ namespace ZoneTool
 			
 			assert(sizeof IW3::GfxBrushModel == 56);
 			assert(sizeof IW4::GfxBrushModel == 60);
+
+			map.modelCount = world->modelCount;
+			if (world->models)
+			{
+				map.models = mem->Alloc<IW4::GfxBrushModel>(world->modelCount);
+
+				for (int i = 0; i < world->modelCount; ++i)
+				{
+					map.models[i].writable.bounds.compute(world->models[i].writable.mins, world->models[i].writable.maxs); // Irrelevant, runtime data
+					map.models[i].bounds.compute(world->models[i].bounds[0], world->models[i].bounds[1]); // Verified
+
+					float* halfSize = map.models[i].bounds.halfSize;
+					map.models[i].radius = static_cast<float>(std::sqrt(std::pow(halfSize[0], 2) + std::pow(halfSize[1], 2) + std::pow(halfSize[2], 2)));
+
+					map.models[i].surfaceCount = world->models[i].surfaceCount;
+					map.models[i].startSurfIndex = world->models[i].startSurfIndex;
+					map.models[i].surfaceCountNoDecal = world->models[i].surfaceCountNoDecal;
+				}
+			}
 
 			map.bounds.compute(world->mins, world->maxs);
 
@@ -288,42 +308,12 @@ namespace ZoneTool
 			memcpy(&map.dpvsDyn, &world->dpvsDyn, sizeof world->dpvsDyn);
 
 			// Should we set that to true? :O
-			map.fogTypesAllowed = 3; // iw4_credits has 0x3
+			map.fogTypesAllowed = 0x1; // iw4_credits has 0x3
 
 			map.sortKeyLitDecal = 0x6;
 			map.sortKeyEffectDecal = 0x27;
 			map.sortKeyEffectAuto = 0x30;
 			map.sortKeyDistortion = 0x2b;
-
-			// sort models
-			map.modelCount = world->modelCount;
-			if (world->models)
-			{
-				map.models = mem->Alloc<IW4::GfxBrushModel>(world->modelCount);
-
-				std::vector<IW4::GfxBrushModel> models;
-				models.resize(world->modelCount);
-
-				for (auto i = 0; i < world->modelCount; ++i)
-				{
-					models[i].writable.bounds.compute(world->models[i].writable.mins, world->models[i].writable.maxs); // Irrelevant, runtime data
-					models[i].bounds.compute(world->models[i].bounds[0], world->models[i].bounds[1]); // Verified
-
-					auto* half_size = models[i].bounds.halfSize;
-					models[i].radius = std::sqrt(std::pow(half_size[0], 2) + std::pow(half_size[1], 2) + std::pow(half_size[2], 2));
-
-					models[i].surfaceCount = world->models[i].surfaceCount;
-					models[i].startSurfIndex = world->models[i].startSurfIndex;
-					models[i].surfaceCountNoDecal = world->models[i].surfaceCountNoDecal;
-				}
-
-				std::sort(models.begin(), models.end(), [](const IW4::GfxBrushModel& m1, const IW4::GfxBrushModel& m2)
-				{
-					return m1.startSurfIndex > m2.startSurfIndex;
-				});
-
-				std::memcpy(map.models, models.data(), sizeof(IW4::GfxBrushModel) * world->modelCount);
-			}
 			
 			// sort triangles & vertices
 			auto tri_index = 0;

@@ -15,6 +15,8 @@ namespace ZoneTool
 		class ISound
 		{
 		public:
+			static IW4::SoundChannel channel_to_iw4(IW3::SoundChannel snd_channel);
+
 			static void dump(snd_alias_list_t* asset, ZoneMemory* mem);
 		};
 	}

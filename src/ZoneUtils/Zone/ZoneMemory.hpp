@@ -28,7 +28,7 @@ namespace ZoneTool
 		{
 			mem_pos_ = 0;
 			memory_size_ = size;
-			memory_pool_ = VirtualAlloc(nullptr, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+			memory_pool_ = VirtualAlloc(nullptr, size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
 			if (!memory_pool_)
 			{
@@ -45,12 +45,13 @@ namespace ZoneTool
 		void Free()
 		{
 			std::lock_guard<std::recursive_mutex> g(this->mutex_);
-			VirtualFree(memory_pool_, memory_size_, MEM_DECOMMIT | MEM_RELEASE);
+			memset(memory_pool_, 0, memory_size_); // zero it
+			VirtualFree(memory_pool_, 0, MEM_RELEASE);
 
 			printf("ZoneTool memory statistics: used %ub of ram (%fmb).\n", mem_pos_,
 				static_cast<float>(mem_pos_) / 1024 / 1024);
 
-			memory_pool_ = nullptr;
+			//memory_pool_ = nullptr;
 			memory_size_ = 0;
 			mem_pos_ = 0;
 		}
@@ -97,6 +98,22 @@ namespace ZoneTool
 		T* ManualAlloc(std::size_t size, std::size_t count = 1)
 		{
 			std::lock_guard<std::recursive_mutex> g(this->mutex_);
+
+			if (count <= 0)
+			{
+				return nullptr;
+			}
+
+			if (mem_pos_ + (size * count) > memory_size_)
+			{
+				char buffer[256];
+				_snprintf_s(buffer, sizeof buffer,
+					"ZoneTool just went out of memory, and has to be closed (%llu/%llu).",
+					mem_pos_ + (size * count), memory_size_);
+
+				MessageBoxA(nullptr, buffer, "ZoneTool: Out of Memory", NULL);
+				std::exit(-1);
+			}
 
 			// alloc pointer and zero it out
 			auto pointer = reinterpret_cast<char*>(memory_pool_) + mem_pos_;

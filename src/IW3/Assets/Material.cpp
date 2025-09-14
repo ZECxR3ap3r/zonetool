@@ -38,7 +38,9 @@
 	for (int i = 0; i < size; i++) \
 	{ \
 		nlohmann::json cent##entry; \
-		cent##entry["name"] = mat->entry[i].name; \
+		std::string name = mat->entry[i].name; \
+		name.resize(12); \
+		cent##entry["name"] = name.data(); \
 		nlohmann::json centliteral##entry; \
 		centliteral##entry[0] = mat->entry[i].literal[0]; \
 		centliteral##entry[1] = mat->entry[i].literal[1]; \
@@ -78,7 +80,11 @@ namespace ZoneTool
 		{
 			if (mat && mat->techniqueSet)
 			{
+#ifdef IW3_TECHSET_FOLDER
 				ITechset::dump_statebits(va("iw3/%s", mat->techniqueSet->name), mat->stateBitsEntry);
+#else
+				ITechset::dump_statebits(mat->techniqueSet->name, mat->stateBitsEntry);
+#endif
 			}
 		}
 		
@@ -145,7 +151,11 @@ namespace ZoneTool
 
 				if (mat->techniqueSet)
 				{
+#ifdef IW3_TECHSET_FOLDER
 					matdata["techniqueSet->name"] = va("iw3/%s", mat->techniqueSet->name);
+#else
+					matdata["techniqueSet->name"] = mat->techniqueSet->name;
+#endif
 				}
 
 				MATERIAL_DUMP_INT(gameFlags);
@@ -169,7 +179,7 @@ namespace ZoneTool
 				MATERIAL_DUMP_INT(surfaceTypeBits);
 				MATERIAL_DUMP_INT(stateFlags);
 				MATERIAL_DUMP_INT(cameraRegion);
-
+				
 				MATERIAL_DUMP_CONST_ARRAY(constantTable, mat->constantCount);
 				MATERIAL_DUMP_STATE_MAP(stateMap, mat->stateBitsCount);
 
@@ -206,15 +216,10 @@ namespace ZoneTool
 
 						for (int i = 0; i < waterData->M * waterData->N; i++)
 						{
-							nlohmann::json complexdata;
-							nlohmann::json curWTerm;
+							waterComplexData[i]["real"] = waterData->H0[i].real;
+							waterComplexData[i]["imag"] = waterData->H0[i].imag;
 
-							complexdata["real"] = waterData->H0[i].real;
-							complexdata["imag"] = waterData->H0[i].imag;
-
-							curWTerm[i] = waterData->wTerm[i];
-
-							waterComplexData[i] = complexdata;
+							wTerm[i] = waterData->wTerm[i];
 						}
 
 						waterdata["complex"] = waterComplexData;

@@ -23,6 +23,7 @@
 
 #include "Json.hpp"
 using Json = nlohmann::json;
+using Orderer_Json = nlohmann::ordered_json;
 
 #undef xor
 #undef and
@@ -61,6 +62,13 @@ namespace ZoneTool
 		const char* zone;
 		std::int32_t loadFlags;
 		std::int32_t unloadFlags;
+	};
+
+	struct XZoneInfoInternal
+	{
+		char name[64];
+		int flags;
+		int isBaseMap;
 	};
 
 	struct ScriptStringList

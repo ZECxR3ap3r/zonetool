@@ -225,7 +225,7 @@ namespace ZoneTool
 			std::string entString(ents->entityString, ents->numEntityChars - 1);
 
 			Entities mapEnts(entString);
-			mapEnts.deleteTriggers();
+			//mapEnts.deleteTriggers();
 			mapEnts.deleteWeapons(/*true*/false); // For now delete turrets, as we can't write weapons
 			mapEnts.convertTurrets();
 			entString = mapEnts.build();

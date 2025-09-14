@@ -45,13 +45,18 @@ namespace ZoneTool
 				return "zonetool\\";
 			}
 
-			std::string path = "zonetool\\" + m_fastfile + "\\" + name;
+			path = "zonetool\\" + m_fastfile + "\\" + name;
 			if (std::filesystem::exists(path))
 			{
 				return "zonetool\\" + m_fastfile + "\\";
 			}
 		}
 
+		path = "zonetool\\" + m_fastfile + "\\images\\" + name;
+		if (std::filesystem::exists(path))
+		{
+			return "zonetool\\" + m_fastfile + "\\images\\";
+		}
 
 		path = "zonetool\\images\\" + name;
 		if (std::filesystem::exists(path))

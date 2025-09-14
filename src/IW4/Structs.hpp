@@ -256,9 +256,23 @@ namespace ZoneTool
 			char* texture; // texture
 		};
 
+		struct __declspec(align(4)) GfxImageLoadDef_2
+		{
+			unsigned char levelCount;
+			unsigned char pad[3];
+			int flags;
+			int format;
+			int resourceSize;
+			char data[1];
+		};
+
 		struct GfxImage
 		{
-			GfxImageLoadDef* texture;
+			union
+			{
+				GfxImageLoadDef* texture;
+				GfxImageLoadDef_2* texture_2;
+			};
 			char mapType; // 5 is cube, 4 is 3d, 3 is 2d
 			char semantic;
 			char category;
@@ -1115,6 +1129,66 @@ namespace ZoneTool
 			float slavePercentage;
 			float masterPercentage;
 		};
+
+		enum SoundChannel : std::uint32_t
+		{
+			SND_CHANNEL_PHYSICS,
+			SND_CHANNEL_AMBDIST1,
+			SND_CHANNEL_AMBDIST2,
+			SND_CHANNEL_AUTO,
+			SND_CHANNEL_AUTO2,
+			SND_CHANNEL_AUTODOG,
+			SND_CHANNEL_BULLETIMPACT,
+			SND_CHANNEL_BULLETWHIZBY,
+			SND_CHANNEL_EXPLOSIVEIMPACT,
+			SND_CHANNEL_ELEMENT,
+			SND_CHANNEL_AUTO2D,
+			SND_CHANNEL_VEHICLE,
+			SND_CHANNEL_VEHICLELIMITED,
+			SND_CHANNEL_MENU,
+			SND_CHANNEL_BODY,
+			SND_CHANNEL_BODY2D,
+			SND_CHANNEL_RELOAD,
+			SND_CHANNEL_RELOAD2D,
+			SND_CHANNEL_ITEM,
+			SND_CHANNEL_EFFECTS1,
+			SND_CHANNEL_EFFECTS2,
+			SND_CHANNEL_WEAPON,
+			SND_CHANNEL_WEAPON2D,
+			SND_CHANNEL_NONSHOCK,
+			SND_CHANNEL_VOICE,
+			SND_CHANNEL_LOCAL,
+			SND_CHANNEL_LOCAL2,
+			SND_CHANNEL_LOCAL3,
+			SND_CHANNEL_AMBIENT,
+			SND_CHANNEL_HURT,
+			SND_CHANNEL_PLAYER1,
+			SND_CHANNEL_PLAYER2,
+			SND_CHANNEL_MUSIC,
+			SND_CHANNEL_MUSICNOPAUSE,
+			SND_CHANNEL_MISSION,
+			SND_CHANNEL_ANNOUNCER,
+			SND_CHANNEL_SHELLSHOCK,
+
+			SND_CHANNEL_COUNT
+		};
+
+		union SoundAliasFlags
+		{
+			struct
+			{
+				unsigned int looping : 1;
+				unsigned int isMaster : 1;
+				unsigned int isSlave : 1;
+				unsigned int fullDryLevel : 1;
+				unsigned int noWetLevel : 1;
+				unsigned int unknown1 : 1;
+				unsigned int unknown2 : 1;
+				unsigned int type : 2;
+				unsigned int channel : 7;
+			};
+			unsigned int intValue;
+		};
 		
 		struct snd_alias_t
 		{
@@ -1927,7 +2001,7 @@ namespace ZoneTool
 
 		struct FxWorld
 		{
-			char* name;
+			const char* name;
 			FxGlassSystem glassSys;
 		};
 #pragma pack(pop)
@@ -3804,11 +3878,11 @@ namespace ZoneTool
 			XModel* xModel;
 			unsigned __int16 brushModel;
 			unsigned __int16 physicsBrushModel;
-			void* destroyFx; // FxEffectDef
+			FxEffectDef* destroyFx;
 			PhysPreset* physPreset;
 			int health;
 			PhysMass mass;
-			//char *unknown;
+			int contents;
 		};
 
 		struct DynEntityPose

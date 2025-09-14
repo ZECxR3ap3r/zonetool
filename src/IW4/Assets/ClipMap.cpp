@@ -76,7 +76,7 @@ namespace ZoneTool
 
 			// cmodels!
 			colmap->numCModels = iw5_colmap->numCModels;
-			colmap->cModels = new cmodel_t[colmap->numCModels];
+			colmap->cModels = mem->Alloc<cmodel_t>(colmap->numCModels);
 			memset(colmap->cModels, 0, sizeof(cmodel_t) * colmap->numCModels);
 
 			for (int i = 0; i < colmap->numCModels; i++)
@@ -94,6 +94,31 @@ namespace ZoneTool
 
 			colmap->smodelNodeCount = iw5_colmap->smodelNodeCount;
 			colmap->smodelNodes = (SModelAabbNode*)iw5_colmap->smodelNodes;
+
+			// dynents
+			for (int i = 0; i < 2; i++)
+			{
+				colmap->dynEntCount[i] = iw5_colmap->dynEntCount[0];
+				colmap->dynEntCount[i] = iw5_colmap->dynEntCount[1];
+
+				colmap->dynEntDefList[i] = mem->Alloc<DynEntityDef>(colmap->dynEntCount[i]);
+				colmap->dynEntPoseList[i] = mem->Alloc<DynEntityPose>(colmap->dynEntCount[i]);
+				colmap->dynEntClientList[i] = mem->Alloc<DynEntityClient>(colmap->dynEntCount[i]);
+				colmap->dynEntCollList[i] = mem->Alloc<DynEntityColl>(colmap->dynEntCount[i]);
+				for (int j = 0; j < colmap->dynEntCount[i]; j++)
+				{
+					// dynEntDefList
+					memcpy(&colmap->dynEntDefList[i][j], &iw5_colmap->dynEntDefList[i][j]._portpad, sizeof(iw5_colmap->dynEntDefList[i][j]._portpad));
+					memcpy(&colmap->dynEntDefList[i][j].mass, &iw5_colmap->dynEntDefList[i][j].mass, sizeof(iw5_colmap->dynEntDefList[i][j].mass));
+					colmap->dynEntDefList[i][j].contents = iw5_colmap->dynEntDefList[i][j].contents;
+
+					memcpy(&colmap->dynEntPoseList[i][j], &iw5_colmap->dynEntPoseList[i][j], sizeof(IW4::DynEntityPose));
+
+					memcpy(&colmap->dynEntClientList[i][j], &iw5_colmap->dynEntClientList[i][j], sizeof(IW4::DynEntityClient));
+
+					memcpy(&colmap->dynEntCollList[i][j], &iw5_colmap->dynEntCollList[i][j], sizeof(IW4::DynEntityColl));
+				}
+			}
 
 			// return converted colmap
 			return colmap;
@@ -129,40 +154,24 @@ namespace ZoneTool
 				}
 			}
 
-			if (data->dynEntDefList[0])
+			for (int i = 0; i < 2; i++)
 			{
-				for (auto i = 0u; i < data->dynEntCount[0]; i++)
+				if (data->dynEntDefList[i])
 				{
-					if (data->dynEntDefList[0][i].xModel)
+					for (int j = 0; j < data->dynEntCount[i]; j++)
 					{
-						zone->add_asset_of_type(xmodel, data->dynEntDefList[0][i].xModel->name);
-					}
-					if (data->dynEntDefList[0][i].destroyFx)
-					{
-						// zone->AddAssetOfType(fx, data->dynEntDefList[0][i].destroyFx->name);
-					}
-					if (data->dynEntDefList[0][i].physPreset)
-					{
-						zone->add_asset_of_type(physpreset, data->dynEntDefList[0][i].physPreset->name);
-					}
-				}
-			}
-
-			if (data->dynEntDefList[1])
-			{
-				for (auto i = 0u; i < data->dynEntCount[1]; i++)
-				{
-					if (data->dynEntDefList[1][i].xModel)
-					{
-						zone->add_asset_of_type(xmodel, data->dynEntDefList[1][i].xModel->name);
-					}
-					if (data->dynEntDefList[1][i].destroyFx)
-					{
-						// zone->AddAssetOfType(fx, data->dynEntDefList[1][i].destroyFx->name);
-					}
-					if (data->dynEntDefList[1][i].physPreset)
-					{
-						zone->add_asset_of_type(physpreset, data->dynEntDefList[1][i].physPreset->name);
+						if (data->dynEntDefList[i][j].xModel)
+						{
+							zone->add_asset_of_type(xmodel, data->dynEntDefList[i][j].xModel->name);
+						}
+						if (data->dynEntDefList[i][j].destroyFx)
+						{
+							zone->add_asset_of_type(fx, data->dynEntDefList[i][j].destroyFx->name);
+						}
+						if (data->dynEntDefList[i][j].physPreset)
+						{
+							zone->add_asset_of_type(physpreset, data->dynEntDefList[i][j].physPreset->name);
+						}
 					}
 				}
 			}
@@ -434,7 +443,7 @@ namespace ZoneTool
 			if (data->dynEntDefList[0])
 			{
 				buf->align(3);
-				auto* dyn_entity_def = buf->write(data->dynEntDefList[0], data->dynEntCount[0]);
+				auto dyn_entity_def = buf->write(data->dynEntDefList[0], data->dynEntCount[0]);
 
 				for (std::uint16_t i = 0; i < data->dynEntCount[0]; i++)
 				{
@@ -445,18 +454,14 @@ namespace ZoneTool
 					}
 					if (data->dynEntDefList[0][i].destroyFx)
 					{
-						// dyn_entity_def[i].destroyFx = reinterpret_cast<FxEffectDef*>(zone->GetAssetPointer(fx, data->dynEntDefList[0][i].destroyFx->name));
+						dyn_entity_def[i].destroyFx = reinterpret_cast<FxEffectDef*>(zone->get_asset_pointer(
+							fx, data->dynEntDefList[0][i].destroyFx->name));
 					}
 					if (data->dynEntDefList[0][i].physPreset)
 					{
 						dyn_entity_def[i].physPreset = reinterpret_cast<PhysPreset*>(zone->get_asset_pointer(
 							physpreset, data->dynEntDefList[0][i].physPreset->name));
 					}
-
-					/*if (data->dynEntDefList[0][i].hinge)
-					{
-						dyn_entity_def[i].hinge = buf->write_s(3, dyn_entity_def[i].hinge, 1);
-					}*/
 				}
 
 				ZoneBuffer::clear_pointer(&dest->dynEntDefList[0]);
@@ -465,7 +470,7 @@ namespace ZoneTool
 			if (data->dynEntDefList[1])
 			{
 				buf->align(3);
-				auto* dyn_entity_def = buf->write(data->dynEntDefList[1], data->dynEntCount[1]);
+				auto dyn_entity_def = buf->write(data->dynEntDefList[1], data->dynEntCount[1]);
 
 				for (std::uint16_t i = 0; i < data->dynEntCount[1]; i++)
 				{
@@ -476,18 +481,14 @@ namespace ZoneTool
 					}
 					if (data->dynEntDefList[1][i].destroyFx)
 					{
-						// dyn_entity_def[i].destroyFx = reinterpret_cast<FxEffectDef*>(zone->GetAssetPointer(fx, data->dynEntDefList[1][i].destroyFx->name));
+						dyn_entity_def[i].destroyFx = reinterpret_cast<FxEffectDef*>(zone->get_asset_pointer(
+							fx, data->dynEntDefList[1][i].destroyFx->name));
 					}
 					if (data->dynEntDefList[1][i].physPreset)
 					{
 						dyn_entity_def[i].physPreset = reinterpret_cast<PhysPreset*>(zone->get_asset_pointer(
 							physpreset, data->dynEntDefList[1][i].physPreset->name));
 					}
-
-					/*if (data->dynEntDefList[1][i].hinge)
-					{
-						dyn_entity_def[i].hinge = buf->write_s(3, dyn_entity_def[i].hinge, 1);
-					}*/
 				}
 
 				ZoneBuffer::clear_pointer(&dest->dynEntDefList[1]);
@@ -619,6 +620,44 @@ namespace ZoneTool
 
 			iw5_clipmap->smodelNodeCount = asset->smodelNodeCount;
 			iw5_clipmap->smodelNodes = (IW5::SModelAabbNode*)asset->smodelNodes;
+
+			// dynEnts
+			for (int i = 0; i < 2; i++)
+			{
+				iw5_clipmap->dynEntCount[i] = asset->dynEntCount[i];
+
+				if (iw5_clipmap->dynEntCount[i] <= 0)
+				{
+					continue;
+				}
+				
+				iw5_clipmap->dynEntDefList[i] = new IW5::DynEntityDef[iw5_clipmap->dynEntCount[i]];
+				iw5_clipmap->dynEntPoseList[i] = new IW5::DynEntityPose[iw5_clipmap->dynEntCount[i]];
+				iw5_clipmap->dynEntClientList[i] = new IW5::DynEntityClient[iw5_clipmap->dynEntCount[i]];
+				iw5_clipmap->dynEntCollList[i] = new IW5::DynEntityColl[iw5_clipmap->dynEntCount[i]];
+				
+				for (int j = 0; j < iw5_clipmap->dynEntCount[i]; j++)
+				{
+					iw5_clipmap->dynEntDefList[i][j].type = (IW5::DynEntityType)asset->dynEntDefList[i][j].type;
+					memcpy(&iw5_clipmap->dynEntDefList[i][j].pose, &asset->dynEntDefList[i][j].pose, sizeof(IW5::DynEntityPose));
+					iw5_clipmap->dynEntDefList[i][j].xModel = (IW5::XModel*)asset->dynEntDefList[i][j].xModel;
+					iw5_clipmap->dynEntDefList[i][j].brushModel = asset->dynEntDefList[i][j].brushModel;
+					iw5_clipmap->dynEntDefList[i][j].physicsBrushModel = asset->dynEntDefList[i][j].physicsBrushModel;
+					iw5_clipmap->dynEntDefList[i][j].destroyFx = (IW5::FxEffectDef*)asset->dynEntDefList[i][j].destroyFx;
+					iw5_clipmap->dynEntDefList[i][j].physPreset = (IW5::PhysPreset*)asset->dynEntDefList[i][j].physPreset;
+					iw5_clipmap->dynEntDefList[i][j].health = asset->dynEntDefList[i][j].health;
+					iw5_clipmap->dynEntDefList[i][j].hinge = nullptr;
+					memcpy(&iw5_clipmap->dynEntDefList[i][j].mass, &asset->dynEntDefList[i][j].mass, sizeof(IW5::PhysMass));
+					iw5_clipmap->dynEntDefList[i][j].contents = asset->dynEntDefList[i][j].contents;
+					
+					memcpy(&iw5_clipmap->dynEntPoseList[i][j], &asset->dynEntPoseList[i][j], sizeof(IW5::DynEntityPose));
+
+					memcpy(&iw5_clipmap->dynEntClientList[i][j], &asset->dynEntClientList[i][j], sizeof(IW5::DynEntityClient) - sizeof(int));
+					iw5_clipmap->dynEntClientList[i][j].contents = 0;
+					
+					memcpy(&iw5_clipmap->dynEntCollList[i][j], &asset->dynEntCollList[i][j], sizeof(IW5::DynEntityColl));
+				}
+			}
 
 			// dump clipmap
 			IW5::IClipMap::dump(iw5_clipmap);

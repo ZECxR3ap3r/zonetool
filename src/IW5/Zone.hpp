@@ -41,6 +41,7 @@ extern std::string currentzone;
 #include "Assets/GlassWorld.hpp"
 #include "Assets/StructuredDataDef.hpp"
 #include "Assets/MenuDef.hpp"
+#include "Assets/MenuList.hpp"
 #include "Assets/ScriptFile.hpp"
 #include "Assets/LightDef.hpp"
 

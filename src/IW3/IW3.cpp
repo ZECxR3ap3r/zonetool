@@ -17,6 +17,8 @@ namespace ZoneTool
 		bool isVerifying = false;
 		auto currentDumpingZone = ""s;
 
+		FILE* csvFile;
+
 		Linker::Linker()
 		{
 		}
@@ -104,60 +106,71 @@ namespace ZoneTool
 0x00726840)[asset->type]);
 			}
 
-#define DECLARE_ASSET(__TYPE__, __ASSET__) \
-	if (asset->type == __TYPE__) \
-	{ \
-		__ASSET__::dump(asset->ptr.__TYPE__, memory.get()); \
-	}
-
 			// fastfile name
 			auto fastfile = static_cast<std::string>(*(const char**)0xE344CC);
-
-			if (asset->type == rawfile && GetAssetName(asset) == currentDumpingZone)
-			{
-				for (auto& ref : referencedAssets)
-				{
-					if (ref.second.length() <= 1 || ref.first == XAssetType::loaded_sound)
-					{
-						continue;
-					}
-
-					const auto asset_name = &ref.second[1];
-					const auto ref_asset = DB_FindXAssetHeader_Unsafe(ref.first, asset_name);
-
-					if (ref_asset == nullptr)
-					{
-						ZONETOOL_ERROR("Could not find referenced asset \"%s\"!", asset_name);
-						continue;
-					}
-					
-					XAsset asset;
-					asset.type = ref.first;
-					asset.ptr.data = ref_asset;
-
-					ZONETOOL_INFO("Dumping additional asset \"%s\" because it is referenced by %s.", asset_name, currentDumpingZone.data());
-					
-					HandleAsset(&asset);
-				}
-
-				ZONETOOL_INFO("Zone \"%s\" dumped.", &fastfile[0]);
-				
-				// clear referenced assets array because we are done dumping
-				referencedAssets.clear();
-
-				// free memory
-				memory->Free();
-				memory = nullptr;
-				
-				FileSystem::SetFastFile("");
-				isDumping = false;
-				isVerifying = false;
-			}
 
 			// dump shit
 			if (isDumping)
 			{
 				FileSystem::SetFastFile(fastfile);
+
+				// open csv file for dumping 
+				if (!csvFile)
+				{
+					csvFile = FileSystem::FileOpen(FileSystem::GetFastFile() + ".csv", "wb");
+				}
+
+				// dump assets to disk
+				if (csvFile)
+				{
+					auto xassettypes = reinterpret_cast<char**>(0x00726840);
+					fprintf(csvFile, "%s,%s\n", xassettypes[asset->type], GetAssetName(asset));
+				}
+
+				if (asset->type == rawfile && GetAssetName(asset) == currentDumpingZone)
+				{
+					for (auto& ref : referencedAssets)
+					{
+						if (ref.second.length() <= 1 || ref.first == XAssetType::loaded_sound)
+						{
+							continue;
+						}
+
+						const auto asset_name = &ref.second[1];
+						const auto ref_asset = DB_FindXAssetHeader_Unsafe(ref.first, asset_name);
+
+						if (ref_asset == nullptr)
+						{
+							ZONETOOL_ERROR("Could not find referenced asset \"%s\"!", asset_name);
+							continue;
+						}
+
+						XAsset asset;
+						asset.type = ref.first;
+						asset.ptr.data = ref_asset;
+
+						ZONETOOL_INFO("Dumping additional asset \"%s\" because it is referenced by %s.", asset_name, currentDumpingZone.data());
+
+						HandleAsset(&asset);
+					}
+
+					ZONETOOL_INFO("Zone \"%s\" dumped.", &fastfile[0]);
+
+					// clear referenced assets array because we are done dumping
+					referencedAssets.clear();
+
+					// free memory
+					memory->Free();
+					memory = nullptr;
+
+					// close csv
+					FileSystem::FileClose(csvFile);
+					csvFile = nullptr;
+
+					FileSystem::SetFastFile("");
+					isDumping = false;
+					isVerifying = false;
+				}
 
 				// check if the asset is a reference asset
 				if (GetAssetName(asset)[0] == ',')
@@ -166,18 +179,33 @@ namespace ZoneTool
 				}
 				else
 				{
-					// DECLARE_ASSET(image, IGfxImage);
-					DECLARE_ASSET(xmodel, IXModel);
-					DECLARE_ASSET(material, IMaterial);
-					DECLARE_ASSET(xanim, IXAnimParts);
-					DECLARE_ASSET(techset, ITechset);
-					DECLARE_ASSET(loaded_sound, ILoadedSound);
-					DECLARE_ASSET(sound, ISound);
-					DECLARE_ASSET(fx, IFxEffectDef);
-					DECLARE_ASSET(gfx_map, IGfxWorld);
-					DECLARE_ASSET(col_map_mp, IClipMap);
-					DECLARE_ASSET(map_ents, IMapEnts);
-					DECLARE_ASSET(com_map, IComWorld);
+#define DECLARE_ASSET(__TYPE__, __ASSET__) \
+if (asset->type == __TYPE__) \
+{ \
+	__ASSET__::dump(asset->ptr.__TYPE__, memory.get()); \
+}
+					try
+					{
+						// DECLARE_ASSET(image, IGfxImage);
+						DECLARE_ASSET(xmodel, IXModel);
+						DECLARE_ASSET(material, IMaterial);
+						DECLARE_ASSET(xanim, IXAnimParts);
+						DECLARE_ASSET(techset, ITechset);
+						DECLARE_ASSET(loaded_sound, ILoadedSound);
+						DECLARE_ASSET(sound, ISound);
+						DECLARE_ASSET(fx, IFxEffectDef);
+						DECLARE_ASSET(font, IFontDef);
+						DECLARE_ASSET(gfx_map, IGfxWorld);
+						DECLARE_ASSET(col_map_mp, IClipMap);
+						DECLARE_ASSET(map_ents, IMapEnts);
+						DECLARE_ASSET(com_map, IComWorld);
+						DECLARE_ASSET(game_map_mp, IGameWorldMp);
+						DECLARE_ASSET(rawfile, IRawFile);
+					}
+					catch (std::exception& ex)
+					{
+						ZONETOOL_FATAL("A fatal exception occured while dumping asset \"%s\", exception was: %s\n", GetAssetName(asset), ex.what());
+					}
 				}
 			}
 		}
@@ -217,6 +245,67 @@ namespace ZoneTool
 		{
 			printf(data);
 		}
+
+		const unsigned int textureBufferSize = 1024 * 1024 * 32; // 32mb
+		unsigned int textureBufferIndex = 0;
+		std::unordered_map<std::string, unsigned int> textureMap;
+		std::string texturesFastfiles;
+
+		char* GetTextureBuffer()
+		{
+			static char textureBuffer[textureBufferSize];
+			return textureBuffer;
+		}
+
+		void ClearTextures()
+		{
+			// fastfile name
+			auto fastfile = static_cast<std::string>(*(const char**)0xE344CC);
+			if (fastfile != texturesFastfiles)
+			{
+				auto* buffer = GetTextureBuffer();
+
+				std::memset(buffer, 0, textureBufferSize);
+				textureBufferIndex = 0;
+				textureMap.clear();
+
+				texturesFastfiles = fastfile;
+			}
+		}
+
+		void StoreTexture()
+		{
+			GfxImageLoadDef** loadDef = *reinterpret_cast<GfxImageLoadDef***>(0xE34814);
+			GfxImage* image = *reinterpret_cast<GfxImage**>(0xE346C4);
+
+			ClearTextures();
+
+			auto* buffer = GetTextureBuffer();
+
+			if (textureMap.find(image->name) != textureMap.end())
+			{
+				void* data = &buffer[textureMap.at(image->name)];
+				image->texture.loadDef = reinterpret_cast<GfxImageLoadDef*>(data);
+				return;
+			}
+			textureMap[image->name] = textureBufferIndex;
+
+			size_t size = 16 + (*loadDef)->resourceSize;
+			void* data = &buffer[textureBufferIndex];
+			textureBufferIndex += size;
+
+			if (textureBufferIndex >= textureBufferSize)
+			{
+				ZONETOOL_FATAL("IW3 Texture Buffer exceeded %imb/%imb", 
+					(textureBufferIndex / 1024 / 1024), (textureBufferSize / 1024 / 1024));
+			}
+
+			std::memcpy(data, *loadDef, size);
+
+			image->texture.loadDef = reinterpret_cast<GfxImageLoadDef*>(data);
+
+			//reinterpret_cast<void(*)()>(0x616E80)();
+		}
 		
 		void Linker::startup()
 		{
@@ -253,8 +342,9 @@ namespace ZoneTool
 				Memory(0x4FFE37).call(Dedicated_RegisterDvarBool);
 				Memory(0x4FFE5D).call(Dedicated_RegisterDvarBool);
 
-				// Don't touch image data
+				// Store image data
 				Memory(0x616E9C).nop(3);
+				Memory(0x47A98E).call(StoreTexture);
 				
 				// idc if you can't initialise PunkBuster
 				Memory(0x5776DF).nop(5);
