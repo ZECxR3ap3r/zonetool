@@ -739,7 +739,7 @@ namespace ZoneTool
 			END_LOG_STREAM;
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof clipMap_t);
+			//encrypt_data(dest, sizeof clipMap_t);
 
 #ifdef USE_VMPROTECT
 			VMProtectEnd();

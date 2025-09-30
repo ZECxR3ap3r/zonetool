@@ -1715,7 +1715,7 @@ namespace ZoneTool
 			END_LOG_STREAM;
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof WeaponCompleteDef);
+			//encrypt_data(dest, sizeof WeaponCompleteDef);
 		}
 
 #define WEAPON_DUMP_FIELD(__field__) \

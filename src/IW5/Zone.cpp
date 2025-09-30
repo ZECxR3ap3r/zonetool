@@ -145,7 +145,7 @@ namespace ZoneTool
 		}
 
 		std::string get_output_filename(const std::string& zone_name) {
-			if (zone_name != "patch_mp" && zone_name != "ui_mp" && !zone_name.starts_with("mp_"))
+			if (zone_name != "patch_mp" && zone_name != "ui_mp" && !zone_name._Starts_with("mp_"))
 				return "mod";
 
 			return zone_name;
@@ -259,11 +259,11 @@ namespace ZoneTool
 				zone->streams[i] = buf->stream_offset(i);
 			}
 
-			auto buf_compressed = buf->compress_zstd();
+			auto buf_compressed = buf->compress_zlib();
 
 			auto header = this->m_zonemem->Alloc<XFileHeader>();
 			strcpy(header->header, "IWffu100");
-			header->version = 2000;
+			header->version = 1;
 			header->allowOnlineUpdate = 0;
 
 			ZoneBuffer fastfile(buf_compressed.size() + 21);
@@ -272,7 +272,7 @@ namespace ZoneTool
 
 			fastfile.write(buf_compressed.data(), buf_compressed.size());
 
-			if (this->name_.starts_with("mp_"))
+			if (this->name_._Starts_with("mp_"))
 			{
 				std::string localappdata = getenv("LOCALAPPDATA");
 				fastfile.save(localappdata + "\\Plutonium\\storage\\iw5\\zone\\mod.ff");

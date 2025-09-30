@@ -251,7 +251,7 @@ namespace ZoneTool
 			END_LOG_STREAM;
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof MapEnts);
+			//encrypt_data(dest, sizeof MapEnts);
 		}
 
 		void IMapEnts::dump(MapEnts* asset)

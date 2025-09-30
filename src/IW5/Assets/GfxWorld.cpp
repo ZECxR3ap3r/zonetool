@@ -1059,7 +1059,7 @@ namespace ZoneTool
 			END_LOG_STREAM;
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof GfxWorld);
+			//encrypt_data(dest, sizeof GfxWorld);
 #ifdef USE_VMPROTECT
 			VMProtectEnd();
 #endif

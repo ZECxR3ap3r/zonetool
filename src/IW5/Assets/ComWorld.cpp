@@ -142,7 +142,7 @@ namespace ZoneTool
 
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof ComWorld);
+			//encrypt_data(dest, sizeof ComWorld);
 		}
 
 		void IComWorld::dump(ComWorld* asset, bool fromIW5)

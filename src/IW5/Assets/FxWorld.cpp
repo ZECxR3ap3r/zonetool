@@ -230,7 +230,7 @@ namespace ZoneTool
 			END_LOG_STREAM;
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof FxWorld);
+			//encrypt_data(dest, sizeof FxWorld);
 		}
 
 		void IFxWorld::dump(FxWorld* asset)

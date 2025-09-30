@@ -258,7 +258,7 @@ namespace ZoneTool
 			END_LOG_STREAM;
 			buf->pop_stream();
 
-			encrypt_data(dest, sizeof MaterialTechniqueSet);
+			//encrypt_data(dest, sizeof MaterialTechniqueSet);
 		}
 
 		void ITechset::dump_technique(MaterialTechnique* asset)
