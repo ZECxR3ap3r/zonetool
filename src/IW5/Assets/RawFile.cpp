@@ -55,7 +55,7 @@ namespace ZoneTool
 			this->name_ = name;
 			this->asset_ = parse(name, mem);
 
-			if (name == FileSystem::GetFastFile())
+			if (name == "mod")
 			{
 				this->asset_ = mem->Alloc<RawFile>();
 				this->asset_->name = mem->StrDup(name);

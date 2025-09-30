@@ -63,31 +63,28 @@ namespace ZoneTool
 					asset->soundFile->sound.streamSnd.name = mem->StrDup(name.data());
 				}
 
-				SOUND_INT(sequence);
-				SOUND_INT(flags);
-				SOUND_INT(startDelay);
-
-				// floats
 				SOUND_FLOAT(volMin);
 				SOUND_FLOAT(volMax);
 				SOUND_FLOAT(pitchMin);
 				SOUND_FLOAT(pitchMax);
 				SOUND_FLOAT(distMin);
 				SOUND_FLOAT(distMax);
-
-				SOUND_FLOAT(slavePercentage);
+				SOUND_FLOAT(velocityMin);
 				SOUND_FLOAT(probability);
+				SOUND_CHAR(sequence);
+				SOUND_INT(startDelay);
+				SOUND_INT(flags);
+
+				SOUND_CHAR(masterPriority);
+				SOUND_FLOAT(masterPercentage);
+				SOUND_FLOAT(slavePercentage);
+
 				SOUND_FLOAT(lfePercentage);
 				SOUND_FLOAT(centerPercentage);
+
 				SOUND_FLOAT(envelopMin);
 				SOUND_FLOAT(envelopMax);
 				SOUND_FLOAT(envelopPercentage);
-
-				SOUND_INT(volModIndex);
-				SOUND_INT(masterPriority);
-				SOUND_FLOAT(velocityMin);
-				SOUND_FLOAT(masterPercentage);
-				SOUND_CHAR(masterPriority);
 
 				if (!snddata["volumeFalloffCurve"].is_null())
 				{
@@ -153,6 +150,10 @@ namespace ZoneTool
 			ZONETOOL_INFO("Parsing sound \"%s\"...", name.c_str());
 
 			auto file = FileSystem::FileOpen(path, "rb");
+
+			if (!file)
+				return nullptr;
+
 			auto size = FileSystem::FileSize(file);
 			auto bytes = FileSystem::ReadBytes(file, size);
 			FileSystem::FileClose(file);
@@ -168,103 +169,14 @@ namespace ZoneTool
 
 			nlohmann::json heads = snddata["head"];
 			for (int i = 0; i < asset->count; i++)
-			{
 				json_parse_snd_alias(&asset->head[i], heads[i], mem);
-			}
 
 			return asset;
 		}
 
 		snd_alias_list_t* ISound::parse(const std::string& name, ZoneMemory* mem)
 		{
-			if (name.empty())
-			{
-				return nullptr;
-			}
-
-			if (FileSystem::FileExists("sounds\\"s + name))
-			{
-				return json_parse(name, mem);
-			}
-
-			const auto path = "sounds\\"s + name + ".xss";
-
-			if (FileSystem::FileExists(path))
-			{
-				AssetReader reader(mem);
-				if (!reader.open(path))
-				{
-					return nullptr;
-				}
-
-				ZONETOOL_INFO("Parsing sound %s...", name.c_str());
-
-				auto* asset = reader.read_single<snd_alias_list_t>();
-				asset->name = reader.read_string();
-				asset->head = reader.read_array<snd_alias_t>();
-
-				for (auto i = 0; i < asset->count; i++)
-				{
-					auto* current = &asset->head[i];
-
-					if (current->aliasName)
-					{
-						current->aliasName = reader.read_string();
-					}
-
-					if (current->subtitle)
-					{
-						current->subtitle = reader.read_string();
-					}
-
-					if (current->secondaryAliasName)
-					{
-						current->secondaryAliasName = reader.read_string();
-					}
-
-					if (current->chainAliasName)
-					{
-						current->chainAliasName = reader.read_string();
-					}
-
-					if (current->mixerGroup)
-					{
-						current->mixerGroup = reader.read_string();
-					}
-
-					if (current->soundFile)
-					{
-						current->soundFile = reader.read_single<SoundFile>();
-
-						if (current->soundFile->type == SAT_LOADED)
-						{
-							current->soundFile->sound.loadSnd = reader.read_asset<LoadedSound>();
-						}
-						else
-						{
-							current->soundFile->sound.streamSnd.name = reader.read_string();
-							current->soundFile->sound.streamSnd.dir = reader.read_string();
-						}
-					}
-
-					if (current->volumeFalloffCurve)
-					{
-						current->volumeFalloffCurve = reader.read_asset<SndCurve>();
-					}
-
-					if (current->speakerMap)
-					{
-						current->speakerMap = reader.read_single<SpeakerMap>();
-						current->speakerMap->name = reader.read_string();
-					}
-				}
-
-				reader.close();
-				
-				return asset;
-			}
-
-			return nullptr;
+			return json_parse(name, mem);
 		}
 
 		void ISound::init(const std::string& name, ZoneMemory* mem)
@@ -302,6 +214,9 @@ namespace ZoneTool
 						zone->add_asset_of_type(loaded_sound, head->soundFile->sound.loadSnd->name);
 					}
 				}
+
+				if(head->secondaryAliasName)
+					zone->add_asset_of_type(sound, head->secondaryAliasName);
 			}
 		}
 
@@ -412,7 +327,7 @@ namespace ZoneTool
 				buf->align(3);
 				auto* dest_sound = buf->write(data->head, data->count);
 
-				for (std::int32_t i = 0; i < data->count; i++)
+				for (unsigned char i = 0; i < data->count; i++)
 				{
 					write_head(zone, buf, &dest_sound[i]);
 				}
@@ -446,7 +361,7 @@ namespace ZoneTool
 			}
 
 			// ints
-			SOUND_DUMP_INT(sequence);
+			SOUND_DUMP_CHAR(sequence);
 			SOUND_DUMP_INT(volModIndex);
 			SOUND_DUMP_INT(flags);
 			SOUND_DUMP_INT(startDelay);

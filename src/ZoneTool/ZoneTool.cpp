@@ -428,46 +428,47 @@ namespace ZoneTool
 		// free csv parser
 		CsvParser_destroy(parser);
 	}
+
+	std::string get_output_filename(const std::string& zone_name) {
+		if (zone_name != "patch_mp" && zone_name != "ui_mp" && !zone_name.starts_with("mp_"))
+			return "mod";
+
+		return zone_name;
+	}
 	
-	void build_zone(ILinker* linker, const std::string& fastfile)
+	void build_zone(ILinker* linker, const std::string& zone_name)
 	{
-		// make sure FS is correct.
-		FileSystem::SetFastFile(fastfile);
+		const std::string output_file = get_output_filename(zone_name);
 
-		ZONETOOL_INFO("Building fastfile \"%s\" for game \"%s\"", fastfile.data(), linker->version());
+		FileSystem::SetFastFile(zone_name);
 
-		auto zone = linker->alloc_zone(fastfile);
+		ZONETOOL_INFO("Building fastfile \"%s\" as output \"%s\" for game \"%s\"", zone_name.c_str(), output_file.c_str(), linker->version());
+
+		auto zone = linker->alloc_zone("mod");
 		if (zone == nullptr)
 		{
-			ZONETOOL_ERROR("An error occured while building fastfile \"%s\": Are you out of memory?", fastfile.data());
+			ZONETOOL_ERROR("An error occurred while building fastfile \"%s\"", zone_name.c_str());
 			return;
 		}
 
-		// set default zone target to PC
 		zone->set_target(zone_target::pc);
 
 		if (linker->version() == "IW4"s)
-		{
 			zone->set_target_version(zone_target_version::iw4_release);
-		}
 		else if (linker->version() == "IW5"s)
-		{
 			zone->set_target_version(zone_target_version::iw5_release);
-		}
-		
-		parse_csv_file(linker, zone.get(), fastfile, fastfile);
 
-		// allocate zone buffer
+		// Parse CSV using the internal zone name
+		parse_csv_file(linker, zone.get(), output_file, zone_name);
+
+		// Allocate zone buffer
 		auto buffer = linker->alloc_buffer();
 
-		// add branding asset
-		zone->add_asset_of_type("rawfile", fastfile);
+		// Branding asset still uses the internal zone name
+		zone->add_asset_of_type("rawfile", output_file);
 
-		// compile zone
+		// Compile the zone (writes to mod.ff instead of zone_name.ff)
 		zone->build(buffer.get());
-
-		// unload fastfiles
-		// linker->UnloadZones();
 	}
 
 	ILinker* current_linker;
@@ -635,9 +636,6 @@ namespace ZoneTool
 	void branding(ILinker* linker)
 	{
 		ZONETOOL_INFO("ZoneTool initialization complete!");
-		ZONETOOL_INFO("Welcome to ZoneTool v" ZONETOOL_VERSION " written by RektInator.");
-		ZONETOOL_INFO("  \"No matter how hard or unlikely, if it's possible, it will be done.\"");
-		ZONETOOL_INFO("Special thanks to: Laupetin, NTAuthority, momo5502, TheApadayo, localhost, X3RX35 & homura.");
 
 		if (linker)
 		{

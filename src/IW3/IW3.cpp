@@ -194,13 +194,13 @@ if (asset->type == __TYPE__) \
 						DECLARE_ASSET(loaded_sound, ILoadedSound);
 						DECLARE_ASSET(sound, ISound);
 						DECLARE_ASSET(fx, IFxEffectDef);
-						DECLARE_ASSET(font, IFontDef);
+						//DECLARE_ASSET(font, IFontDef);
 						DECLARE_ASSET(gfx_map, IGfxWorld);
 						DECLARE_ASSET(col_map_mp, IClipMap);
 						DECLARE_ASSET(map_ents, IMapEnts);
 						DECLARE_ASSET(com_map, IComWorld);
 						DECLARE_ASSET(game_map_mp, IGameWorldMp);
-						DECLARE_ASSET(rawfile, IRawFile);
+						//DECLARE_ASSET(rawfile, IRawFile);
 					}
 					catch (std::exception& ex)
 					{

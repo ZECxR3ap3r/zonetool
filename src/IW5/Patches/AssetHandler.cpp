@@ -18,6 +18,8 @@ namespace ZoneTool
 		XAssetEntry AssetHandler::XAssetEntries[AssetEntries];
 		std::uint32_t AssetHandler::db_hashmap[AssetEntries];
 
+		std::vector<std::pair<std::string, std::string>> AssetHandler::assetList;
+
 		bool AssetHandler::verify = false;
 		bool AssetHandler::dump = false;
 
@@ -143,24 +145,22 @@ namespace ZoneTool
 				CommonAssets.push_back({type, GetAssetName(type, ptr)});
 			}
 
-			if (dump)
-			{
-				//if (fastfile != FileSystem::GetFastFile()) return;
-
-				// open csv file for dumping 
+			if (dump) {
 				if (!csvFile)
 				{
 					csvFile = FileSystem::FileOpen(FileSystem::GetFastFile() + ".csv", "wb");
 				}
 
-				// dump assets to disk
 				if (csvFile)
 				{
 					auto xassettypes = reinterpret_cast<char**>(0x7C6208);
-					fprintf(csvFile, "%s,%s\n", xassettypes[type], GetAssetName(type, ptr));
+
+					if (type != 0 && type != 1 && type != 6 && type != 7 && type != 8 && type != 9 && type != 10 && type != 26 && type != 3 && type != 12)
+					{
+						assetList.emplace_back(xassettypes[type], GetAssetName(type, ptr));
+					}
 				}
 
-				// check if we're done loading the fastfile
 				if (type == rawfile && GetAssetName(type, ptr) == FileSystem::GetFastFile())
 				{
 					for (auto& asset : referencedAssets)
@@ -182,6 +182,26 @@ namespace ZoneTool
 						ZONETOOL_INFO("Dumping additional asset \"%s\" because it is referenced by %s.", asset_name, FileSystem::GetFastFile().data());
 
 						DB_LogLoadedAsset(ref_asset, asset.first);
+					}
+
+					if (csvFile) {
+						std::sort(assetList.begin(), assetList.end(), [](auto& a, auto& b) {
+							if (a.first == b.first)
+								return a.second < b.second;
+							return a.first < b.first;
+						});
+
+						std::string lastType;
+						for (auto& asset : assetList)
+						{
+							if (!lastType.empty() && lastType != asset.first)
+								fprintf(csvFile, "\n");
+
+							fprintf(csvFile, "%s,%s\n", asset.first.c_str(), asset.second.c_str());
+							lastType = asset.first;
+						}
+
+						fflush(csvFile);
 					}
 
 					StopDump();

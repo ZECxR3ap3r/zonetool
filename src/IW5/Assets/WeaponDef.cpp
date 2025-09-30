@@ -14,9 +14,14 @@ namespace ZoneTool
 	{
 
 #define WEAPON_READ_FIELD(__type__, __field__) \
-	if (!data[#__field__].is_null()) *(__type__*)(&weapon->__field__) = (__type__)data[#__field__].get<__type__>()
+	do { \
+		ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
+		if (!data[#__field__].is_null()) \
+			*(__type__*)(&weapon->__field__) = (__type__)data[#__field__].get<__type__>(); \
+	} while (0)
 
 #define WEAPON_READ_FIELD_ARR(__type__, __field__, __size__) \
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
 	if (!data[#__field__].is_null()) \
 	{ \
 		for (auto idx##__field__ = 0u; idx##__field__ < __size__; idx##__field__++) \
@@ -26,6 +31,7 @@ namespace ZoneTool
 	}
 
 #define WEAPON_READ_FIELD_ARR_ALLOC(__type__, __field__, __size__) \
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
 	if (!data[#__field__].is_null()) \
 	{ \
 		weapon->__field__ = mem->Alloc<__type__>(__size__); \
@@ -36,9 +42,13 @@ namespace ZoneTool
 	}
 
 #define WEAPON_READ_STRING(__field__) \
-	if (!data[#__field__].is_null()) weapon->__field__ = mem->StrDup(data[#__field__].get<std::string>())
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
+	if (!data[#__field__].is_null()) { \
+		weapon->__field__ = mem->StrDup(data[#__field__].get<std::string>()); /* <-- Semicolon added here */ \
+	}
 
 #define WEAPON_READ_ASSET(__type__, __datafield__, __field__) \
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
 	if (!data[#__field__].is_null() && data[#__field__].is_string()) \
 	{ \
 		auto asset##__field__ = data[#__field__].get<std::string>(); \
@@ -464,7 +474,6 @@ namespace ZoneTool
 				weapon->stowTag = SL_AllocString(stowTag);
 			}
 
-
 			weapon->accuracyGraphName[0] = nullptr;
 			weapon->accuracyGraphName[1] = nullptr;
 			weapon->accuracyGraphKnots = nullptr;
@@ -479,6 +488,7 @@ namespace ZoneTool
 
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield gunXModel");
 				auto gunmodel = data["gunXModel"][i].get<std::string>();
 
 				if (!gunmodel.empty())
@@ -492,6 +502,7 @@ namespace ZoneTool
 			}
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield worldXModel");
 				auto gunmodel = data["worldXModel"][i].get<std::string>();
 
 				if (!gunmodel.empty())
@@ -508,11 +519,14 @@ namespace ZoneTool
 			weapon->notetrackSoundMapValues = mem->Alloc<short>(24);
 			for (int i = 0; i < 24; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackSoundMapKeys");
 				auto notetrack = data["notetrackSoundMapKeys"][i].get<std::string>();
 				weapon->notetrackSoundMapKeys[i] = SL_AllocString(notetrack);
 			}
+
 			for (int i = 0; i < 24; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackSoundMapValues");
 				auto notetrack = data["notetrackSoundMapValues"][i].get<std::string>();
 				weapon->notetrackSoundMapValues[i] = SL_AllocString(notetrack);
 			}
@@ -521,17 +535,22 @@ namespace ZoneTool
 			weapon->notetrackRumbleMapValues = mem->Alloc<short>(16);
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackRumbleMapKeys");
 				auto notetrack = data["notetrackRumbleMapKeys"][i].get<std::string>();
 				weapon->notetrackRumbleMapKeys[i] = SL_AllocString(notetrack);
 			}
+
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackRumbleMapValues");
 				auto notetrack = data["notetrackRumbleMapValues"][i].get<std::string>();
 				weapon->notetrackRumbleMapValues[i] = SL_AllocString(notetrack);
 			}
 
 			for (int i = 0; i < 48; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield sounds");
+
 				auto sound = data["sounds"][i].get<std::string>();
 
 				if (!sound.empty())
@@ -545,6 +564,8 @@ namespace ZoneTool
 			}
 
 			if (data.contains("szXAnimsLeftHanded") && data["szXAnimsLeftHanded"].is_array()) {
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield szXAnimsLeftHanded");
+
 				weapon->szXAnimsLeftHanded = mem->Alloc<const char*>(42);
 
 				for (int i = 0; i < 42; i++) {
@@ -561,6 +582,8 @@ namespace ZoneTool
 			}
 
 			if (data.contains("szXAnimsRightHanded") && data["szXAnimsRightHanded"].is_array()) {
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield szXAnimsRightHanded");
+
 				weapon->szXAnimsRightHanded = mem->Alloc<const char*>(42);
 
 				for (int i = 0; i < 42; i++) {
@@ -577,6 +600,8 @@ namespace ZoneTool
 				weapon->szXAnimsRightHanded = nullptr;
 			}
 
+			ZONETOOL_INFO("Weapon File Completed!");
+
 			return weapon;
 		}
 
@@ -591,7 +616,7 @@ namespace ZoneTool
 				return nullptr;
 			}
 
-			ZONETOOL_INFO("Parsing weapon \"%s\"...", name.data());
+			ZONETOOL_INFO("Parsing Weapon \"%s\"...", name.data());
 
 			auto weapon = mem->Alloc<WeaponCompleteDef>();
 
@@ -736,6 +761,7 @@ namespace ZoneTool
 			if (weapon->numSoundOverrides)
 			{
 				weapon->soundOverrides = mem->Alloc<SoundOverrideEntry>(weapon->numSoundOverrides);
+
 				for (int i = 0; i < weapon->numSoundOverrides; i++)
 				{
 					weapon->soundOverrides[i].altmodeSound = (data["soundOverrides"][i]["altmodeSound"].is_string())
@@ -782,11 +808,12 @@ namespace ZoneTool
 			if (weapon->numReloadStateTimerOverrides)
 			{
 				weapon->reloadOverrides = mem->Alloc<ReloadStateTimerEntry>(weapon->numReloadStateTimerOverrides);
+
 				for (int i = 0; i < weapon->numReloadStateTimerOverrides; i++)
 				{
-					weapon->reloadOverrides[i].attachment = data["attachment"].get<int>();
-					weapon->reloadOverrides[i].reloadAddTime = data["reloadAddTime"].get<int>();
-					weapon->reloadOverrides[i].reloadEmptyAddTime = data["reloadEmptyAddTime"].get<int>();
+					weapon->reloadOverrides[i].attachment = data["reloadOverrides"][i]["attachment"].get<int>();
+					weapon->reloadOverrides[i].reloadAddTime = data["reloadOverrides"][i]["reloadAddTime"].get<int>();
+					weapon->reloadOverrides[i].reloadEmptyAddTime = data["reloadOverrides"][i]["reloadEmptyAddTime"].get<int>();
 				}
 			}
 

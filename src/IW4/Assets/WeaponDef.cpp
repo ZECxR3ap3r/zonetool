@@ -63,14 +63,14 @@ namespace ZoneTool
 			COPY_STRUCT_AREA(WeaponDef, hasDetonator, offhandHoldIsCancelable);
 
 			iw5_weapon->weapDef->bounceSound = reinterpret_cast<IW5::snd_alias_list_t**>(weapon->weapDef->bounceSound);
-			iw5_weapon->weapDef->stowTag = SL_AllocString("tag_stowed_back");
+			//iw5_weapon->weapDef->stowTag = SL_AllocString("tag_stowed_back");
 			
 			// fixup weapon name
 			iw5_weapon->szInternalName = _strdup(va("iw5_%s", weapon->szInternalName).data());
 			iw5_weapon->weapDef->szOverlayName = _strdup(va("iw5_%s", weapon->szInternalName).data());
 
 			// dump iw5 weapon file
-			IW5::IWeaponDef::dump(iw5_weapon, SL_ConvertToString);
+			//IW5::IWeaponDef::dump(iw5_weapon, SL_ConvertToString);
 
 			// free memory
 			free((void*)iw5_weapon->szInternalName);

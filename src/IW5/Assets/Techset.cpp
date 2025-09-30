@@ -183,15 +183,6 @@ namespace ZoneTool
 
 			dest->name = buf->write_str(this->name());
 			dest->remappedTechniques = nullptr;
-
-//#ifdef DEBUG
-//			if (IsDebuggerPresent() && data->techniques[5] == nullptr && data->techniques[9] == nullptr)
-//			{
-//				__debugbreak();
-//			}
-//#endif
-//			
-//			assert(data->techniques[5] != nullptr || data->techniques[9] != nullptr);
 			
 			for (auto technique = 0; technique < 54; technique++)
 			{

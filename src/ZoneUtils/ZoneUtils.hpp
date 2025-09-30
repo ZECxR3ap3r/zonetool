@@ -168,19 +168,58 @@ namespace ZoneTool
 		static_assert(sizeof(*this) == __size__, __FUNCTION__": Invalid struct size.\n"); \
 	}
 
+// Simple helper to set console color
+inline void SetColor(WORD color)
+{
+	static HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, color);
+}
+
+// Define color codes (foreground only)
+#define COLOR_DEFAULT 7   // White/Grey
+#define COLOR_INFO    11  // Green
+#define COLOR_WARN    14  // Yellow
+#define COLOR_ERROR   12  // Red
+#define COLOR_FATAL   79  // White on Red (Background)
+
 #define ZONETOOL_INFO(__FMT__,...) \
-	printf("[ INFO ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__)
-
-#define ZONETOOL_ERROR(__FMT__,...) \
-	printf("[ ERROR ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__)
-
-#define ZONETOOL_FATAL(__FMT__,...) \
-	printf("[ FATAL ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__); \
-	MessageBoxA(nullptr, &va("Oops! An unexpected error occured. Error was: " __FMT__ "\n\nZoneTool must be restarted to resolve the error. Last error code reported by windows: 0x%08X (%u)", __VA_ARGS__, GetLastError(), GetLastError())[0], nullptr, 0); \
-	std::exit(0)
+    do { \
+        SetColor(COLOR_INFO); \
+        printf("%s " __FMT__ "\n", __FUNCTION__ , __VA_ARGS__); \
+        SetColor(COLOR_DEFAULT); \
+    } while(0)
 
 #define ZONETOOL_WARNING(__FMT__,...) \
-	printf("[ WARNING ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__)
+    do { \
+        SetColor(COLOR_WARN); \
+        printf("%s " __FMT__ "\n", __FUNCTION__ , __VA_ARGS__); \
+        SetColor(COLOR_DEFAULT); \
+    } while(0)
+
+#define ZONETOOL_WEAPONINFO(__FMT__,...) \
+    do { \
+        SetColor(9); \
+        printf("%s " __FMT__ "\n", __FUNCTION__ , __VA_ARGS__); \
+        SetColor(COLOR_DEFAULT); \
+    } while(0)
+
+#define ZONETOOL_ERROR(__FMT__,...) \
+    do { \
+        SetColor(COLOR_ERROR); \
+        printf("%s " __FMT__ "\n", __FUNCTION__ , __VA_ARGS__); \
+        SetColor(COLOR_DEFAULT); \
+    } while(0)
+
+#define ZONETOOL_FATAL(__FMT__,...) \
+    do { \
+        SetColor(COLOR_FATAL); \
+        printf("[ %s ]: " __FMT__ "\n", __FUNCTION__ , __VA_ARGS__); \
+        SetColor(COLOR_DEFAULT); \
+        MessageBoxA(nullptr, &va("Oops! An unexpected error occured. Error was: " __FMT__ \
+        "\n\nZoneTool must be restarted to resolve the error. Last error code reported by windows: 0x%08X (%u)", \
+        __VA_ARGS__, GetLastError(), GetLastError())[0], nullptr, 0); \
+        std::exit(0); \
+    } while(0)
 
 /*
  *	Debugging purposes
