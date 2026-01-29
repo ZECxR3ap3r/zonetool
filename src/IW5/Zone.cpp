@@ -16,9 +16,9 @@ namespace ZoneTool
 		{
 			if (name.empty())
 			{
-				return nullptr;	
+				return nullptr;
 			}
-			
+
 			for (std::size_t idx = 0; idx < m_assets.size(); idx++)
 			{
 				if (m_assets[idx]->type() == type && m_assets[idx]->name() == name)
@@ -37,7 +37,7 @@ namespace ZoneTool
 			{
 				return;
 			}
-			
+
 			if (get_asset_pointer(type, GetAssetName(type, pointer)))
 			{
 				return;
@@ -73,7 +73,7 @@ namespace ZoneTool
 			{
 				return;
 			}
-			
+
 			// don't add asset if it already exists
 			if (get_asset_pointer(type, name))
 			{
@@ -144,18 +144,23 @@ namespace ZoneTool
 			this->add_asset_of_type(itype, name);
 		}
 
+		std::string get_output_filename(const std::string& zone_name) {
+			if (zone_name != "patch_mp" && zone_name != "ui_mp" && !zone_name.starts_with("mp_"))
+				return "mod";
+
+			return zone_name;
+		}
+
 		void Zone::build(ZoneBuffer* buf)
 		{
-#ifdef USE_VMPROTECT
-			VMProtectBeginUltra("IW5::Zone::Build");
-#endif
-
 			auto startTime = GetTickCount64();
 
 			// make a folder in main, for the map images
 			std::filesystem::create_directories("main\\" + this->name_ + "\\images");
 
-			ZONETOOL_INFO("Compiling fastfile \"%s\"...", this->name_.data());
+			const std::string output_file = get_output_filename(this->name_);
+
+			ZONETOOL_INFO("Compiling fastfile mod.ff");
 
 			constexpr std::size_t num_streams = 9;
 			XZoneMemory<num_streams> mem;
@@ -229,11 +234,6 @@ namespace ZoneTool
 			// write assets
 			for (auto& asset : m_assets)
 			{
-#ifdef DEBUG
-				auto xassettypes = reinterpret_cast<char**>(0x7C6208);
-				ZONETOOL_INFO("writing asset \"%s\" of type %s...", asset->name().data(), xassettypes[asset->type()]);
-#endif
-
 				// push stream
 				buf->push_stream(0);
 				buf->align(3);
@@ -259,19 +259,13 @@ namespace ZoneTool
 				zone->streams[i] = buf->stream_offset(i);
 			}
 
-			// Dump zone to disk (for debugging)
-			buf->save("debug\\" + this->name_ + ".zone");
-
-			// Compress buffer
 			auto buf_compressed = buf->compress_zstd();
 
-			// Generate FF header
 			auto header = this->m_zonemem->Alloc<XFileHeader>();
 			strcpy(header->header, "IWffu100");
 			header->version = 2000;
 			header->allowOnlineUpdate = 0;
 
-			// Save fastfile
 			ZoneBuffer fastfile(buf_compressed.size() + 21);
 			fastfile.init_streams(1);
 			fastfile.write_stream(header, 21);
@@ -281,15 +275,14 @@ namespace ZoneTool
 			if (this->name_.starts_with("mp_"))
 			{
 				std::string localappdata = getenv("LOCALAPPDATA");
-				fastfile.save(localappdata + "\\Plutonium\\storage\\iw5\\zone\\" + this->name_ + ".ff");
+				fastfile.save(localappdata + "\\Plutonium\\storage\\iw5\\zone\\mod.ff");
 			}
 
-			// oxygen output paths
-			// fastfile.save("C:\\Users\\RektInator\\AppData\\Local\\Plutonium\\storage\\iw5\\zone\\" + this->name_ + ".ff");
-			fastfile.save("zone\\english\\" + this->name_ + ".ff");
+			fastfile.save("zone\\english\\mod.ff");
 
-			ZONETOOL_INFO("Successfully compiled fastfile \"%s\"!", this->name_.data());
+			ZONETOOL_INFO("Successfully compiled fastfile \"%s\"!", "mod.ff");
 			ZONETOOL_INFO("Compiling took %u msec.", GetTickCount64() - startTime);
+			ZONETOOL_INFO("Fastfile Version: %u", header->version);
 
 			// this->m_linker->UnloadZones();
 

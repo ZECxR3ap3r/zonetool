@@ -10,6 +10,102 @@
 
 namespace ZoneTool
 {
+	std::array<const char*, 74> volume_mod_groups =
+	{
+		"foley",              // 0
+		"wpnai",              // 1
+		"wpnplyr",            // 2
+		"hud",                // 3
+		"interface",          // 4
+		"interface_music",    // 5
+		"music",              // 6
+		"music_emitter",      // 7
+		"ambience",           // 8
+		"ambience_dist",      // 9
+		"element",            // 10
+		"emitter",            // 11
+		"physics",            // 12
+		"bodyfall",           // 13
+		"foley_plr",          // 14
+		"foleymp_plr",        // 15
+		"foley_npc",          // 16
+		"foleymp_npc",        // 17
+		"foley_wpn_plr",      // 18
+		"foley_wpn_npc",      // 19
+		"footstep_plr",       // 20
+		"footstep_npc",       // 21
+		"footstepmp_plr",     // 22
+		"footstepmp_npc",     // 23
+		"melee_plr",          // 24
+		"melee_npc",          // 25
+		"chatteral",          // 26
+		"chatterax",          // 27
+		"reactional",         // 28
+		"reactionax",         // 29
+		"voiceover",          // 30
+		"voiceover_radio",    // 31
+		"voiceover_critical", // 32
+		"voiceover_amb",      // 33
+		"destruct",           // 34
+		"explosion",          // 35
+		"explosion_grenade",  // 36
+		"explosion_flashbang",// 37
+		"explosion_rocket",   // 38
+		"explosion_car",      // 39
+		"impact",             // 40
+		"impact_plr",         // 41
+		"impact_npc",         // 42
+		"impactmp",           // 43
+		"impactmp_plr",       // 44
+		"impactmp_npc",       // 45
+		"whizby",             // 46
+		"whizbymp",           // 47
+		"vehicle_plr",        // 48
+		"vehicle_npc",        // 49
+		"vehicle_wpn_plr",    // 50
+		"vehicle_wpn_npc",    // 51
+		"vehicle",            // 52
+		"grenadebounce",      // 53
+		"grenadebouncemp",    // 54
+		"shellcasings",       // 55
+		"shellcasingsmp",     // 56
+		"wpn_plr",            // 57
+		"wpnmp_plr",          // 58
+		"wpn_npc",            // 59
+		"wpnmp_npc",          // 60
+		"wpn_projectile",     // 61
+		"wpnmp_projectile",   // 62
+		"na",                 // 63
+		"max",                // 64
+		"scripted1",          // 65
+		"scripted2",          // 66
+		"scripted3",          // 67
+		"scripted4",          // 68
+		"scripted5",          // 69
+		"fullvolume",         // 70
+		"perkmp_quiet",       // 71
+		"level_ac130",        // 72
+		"default",            // 73
+	};
+
+	const char* get_vol_mod_name(int index)
+	{
+		return volume_mod_groups[index];
+	}
+
+	int get_vol_mod_index_from_name(const char* name)
+	{
+		for (int i = 0; i < volume_mod_groups.size(); i++)
+		{
+			const char* vol_mod = volume_mod_groups[i];
+			if (!_stricmp(vol_mod, name))
+			{
+				return i;
+			}
+		}
+		return -1;
+	}
+
 #define SOUND_DUMP_STRING(entry) \
 	if (asset->entry) sound[#entry] = std::string(asset->entry); \
 	else sound[#entry] = nullptr;
@@ -63,31 +159,31 @@ namespace ZoneTool
 					asset->soundFile->sound.streamSnd.name = mem->StrDup(name.data());
 				}
 
-				SOUND_INT(sequence);
-				SOUND_INT(flags);
-				SOUND_INT(startDelay);
+				asset->volModIndex = snddata["volModIndex"].get<int>();
+				ZONETOOL_INFO("VOLMODINDEX %d", asset->volModIndex);
 
-				// floats
 				SOUND_FLOAT(volMin);
 				SOUND_FLOAT(volMax);
 				SOUND_FLOAT(pitchMin);
 				SOUND_FLOAT(pitchMax);
 				SOUND_FLOAT(distMin);
 				SOUND_FLOAT(distMax);
-
-				SOUND_FLOAT(slavePercentage);
+				SOUND_FLOAT(velocityMin);
 				SOUND_FLOAT(probability);
+				SOUND_CHAR(sequence);
+				SOUND_INT(startDelay);
+				SOUND_INT(flags);
+
+				SOUND_CHAR(masterPriority);
+				SOUND_FLOAT(masterPercentage);
+				SOUND_FLOAT(slavePercentage);
+
 				SOUND_FLOAT(lfePercentage);
 				SOUND_FLOAT(centerPercentage);
+
 				SOUND_FLOAT(envelopMin);
 				SOUND_FLOAT(envelopMax);
 				SOUND_FLOAT(envelopPercentage);
-
-				SOUND_INT(volModIndex);
-				SOUND_INT(masterPriority);
-				SOUND_FLOAT(velocityMin);
-				SOUND_FLOAT(masterPercentage);
-				SOUND_CHAR(masterPriority);
 
 				if (!snddata["volumeFalloffCurve"].is_null())
 				{
@@ -153,6 +249,10 @@ namespace ZoneTool
 			ZONETOOL_INFO("Parsing sound \"%s\"...", name.c_str());
 
 			auto file = FileSystem::FileOpen(path, "rb");
+
+			if (!file)
+				return nullptr;
+
 			auto size = FileSystem::FileSize(file);
 			auto bytes = FileSystem::ReadBytes(file, size);
 			FileSystem::FileClose(file);
@@ -168,103 +268,14 @@ namespace ZoneTool
 
 			nlohmann::json heads = snddata["head"];
 			for (int i = 0; i < asset->count; i++)
-			{
 				json_parse_snd_alias(&asset->head[i], heads[i], mem);
-			}
 
 			return asset;
 		}
 
 		snd_alias_list_t* ISound::parse(const std::string& name, ZoneMemory* mem)
 		{
-			if (name.empty())
-			{
-				return nullptr;
-			}
-
-			if (FileSystem::FileExists("sounds\\"s + name))
-			{
-				return json_parse(name, mem);
-			}
-
-			const auto path = "sounds\\"s + name + ".xss";
-
-			if (FileSystem::FileExists(path))
-			{
-				AssetReader reader(mem);
-				if (!reader.open(path))
-				{
-					return nullptr;
-				}
-
-				ZONETOOL_INFO("Parsing sound %s...", name.c_str());
-
-				auto* asset = reader.read_single<snd_alias_list_t>();
-				asset->name = reader.read_string();
-				asset->head = reader.read_array<snd_alias_t>();
-
-				for (auto i = 0; i < asset->count; i++)
-				{
-					auto* current = &asset->head[i];
-
-					if (current->aliasName)
-					{
-						current->aliasName = reader.read_string();
-					}
-
-					if (current->subtitle)
-					{
-						current->subtitle = reader.read_string();
-					}
-
-					if (current->secondaryAliasName)
-					{
-						current->secondaryAliasName = reader.read_string();
-					}
-
-					if (current->chainAliasName)
-					{
-						current->chainAliasName = reader.read_string();
-					}
-
-					if (current->mixerGroup)
-					{
-						current->mixerGroup = reader.read_string();
-					}
-
-					if (current->soundFile)
-					{
-						current->soundFile = reader.read_single<SoundFile>();
-
-						if (current->soundFile->type == SAT_LOADED)
-						{
-							current->soundFile->sound.loadSnd = reader.read_asset<LoadedSound>();
-						}
-						else
-						{
-							current->soundFile->sound.streamSnd.name = reader.read_string();
-							current->soundFile->sound.streamSnd.dir = reader.read_string();
-						}
-					}
-
-					if (current->volumeFalloffCurve)
-					{
-						current->volumeFalloffCurve = reader.read_asset<SndCurve>();
-					}
-
-					if (current->speakerMap)
-					{
-						current->speakerMap = reader.read_single<SpeakerMap>();
-						current->speakerMap->name = reader.read_string();
-					}
-				}
-
-				reader.close();
-				
-				return asset;
-			}
-
-			return nullptr;
+			return json_parse(name, mem);
 		}
 
 		void ISound::init(const std::string& name, ZoneMemory* mem)
@@ -302,6 +313,9 @@ namespace ZoneTool
 						zone->add_asset_of_type(loaded_sound, head->soundFile->sound.loadSnd->name);
 					}
 				}
+
+				if(head->secondaryAliasName)
+					zone->add_asset_of_type(sound, head->secondaryAliasName);
 			}
 		}
 
@@ -412,7 +426,7 @@ namespace ZoneTool
 				buf->align(3);
 				auto* dest_sound = buf->write(data->head, data->count);
 
-				for (std::int32_t i = 0; i < data->count; i++)
+				for (unsigned char i = 0; i < data->count; i++)
 				{
 					write_head(zone, buf, &dest_sound[i]);
 				}
@@ -446,7 +460,7 @@ namespace ZoneTool
 			}
 
 			// ints
-			SOUND_DUMP_INT(sequence);
+			SOUND_DUMP_CHAR(sequence);
 			SOUND_DUMP_INT(volModIndex);
 			SOUND_DUMP_INT(flags);
 			SOUND_DUMP_INT(startDelay);

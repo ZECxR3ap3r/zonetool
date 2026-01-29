@@ -107,6 +107,13 @@ namespace ZoneTool
 			void* data;
 		};
 
+		struct LocalizeEntry
+		{
+			const char* value;
+			const char* name;
+		};
+
+
 		struct GfxImage
 		{
 			MapType mapType;

@@ -31,6 +31,7 @@ namespace ZoneTool
 			std::int32_t type() override;
 			void write(IZone* zone, ZoneBuffer* buffer) override;
 
+			static void json_dump(GfxWorld* asset);
 			static void dump(GfxWorld* asset);
 		};
 	}

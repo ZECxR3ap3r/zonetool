@@ -126,14 +126,6 @@ namespace ZoneTool
 
 		void ILightDef::dump(GfxLightDef* asset)
 		{
-			const auto data = asset->ToJson();
-
-			const auto path = "lights/"s + asset->name + ".lightdef"s;
-			const auto json = data.dump(4);
-
-			auto* file = FileSystem::FileOpen(path, "w"s);
-			fwrite(json.data(), json.size(), 1, file);
-			FileSystem::FileClose(file);
 		}
 	}
 }

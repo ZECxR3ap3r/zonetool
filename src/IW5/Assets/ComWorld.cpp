@@ -147,14 +147,6 @@ namespace ZoneTool
 
 		void IComWorld::dump(ComWorld* asset, bool fromIW5)
 		{
-			const auto data = asset->ToJson(fromIW5);
-
-			const auto path = asset->name + ".comworld"s;
-			const auto json = data.dump(4);
-
-			auto* file = FileSystem::FileOpen(path, "w"s);
-			fwrite(json.data(), json.size(), 1, file);
-			FileSystem::FileClose(file);
 		}
 	}
 }

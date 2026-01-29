@@ -1,6 +1,3 @@
-// ======================= ZoneTool =======================
-// zonetool, a fastfile linker for various
-// Call of Duty titles. 
 //
 // Project: https://github.com/ZoneTool/zonetool
 // Author: RektInator (https://github.com/RektInator)
@@ -14,9 +11,14 @@ namespace ZoneTool
 	{
 
 #define WEAPON_READ_FIELD(__type__, __field__) \
-	if (!data[#__field__].is_null()) *(__type__*)(&weapon->__field__) = (__type__)data[#__field__].get<__type__>()
+	do { \
+		ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
+		if (!data[#__field__].is_null()) \
+			*(__type__*)(&weapon->__field__) = (__type__)data[#__field__].get<__type__>(); \
+	} while (0)
 
 #define WEAPON_READ_FIELD_ARR(__type__, __field__, __size__) \
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
 	if (!data[#__field__].is_null()) \
 	{ \
 		for (auto idx##__field__ = 0u; idx##__field__ < __size__; idx##__field__++) \
@@ -26,6 +28,7 @@ namespace ZoneTool
 	}
 
 #define WEAPON_READ_FIELD_ARR_ALLOC(__type__, __field__, __size__) \
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
 	if (!data[#__field__].is_null()) \
 	{ \
 		weapon->__field__ = mem->Alloc<__type__>(__size__); \
@@ -36,9 +39,13 @@ namespace ZoneTool
 	}
 
 #define WEAPON_READ_STRING(__field__) \
-	if (!data[#__field__].is_null()) weapon->__field__ = mem->StrDup(data[#__field__].get<std::string>())
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
+	if (!data[#__field__].is_null()) { \
+		weapon->__field__ = mem->StrDup(data[#__field__].get<std::string>()); /* <-- Semicolon added here */ \
+	}
 
 #define WEAPON_READ_ASSET(__type__, __datafield__, __field__) \
+	ZONETOOL_WEAPONINFO("Parsing Weaponfield \"%s\"", #__field__); \
 	if (!data[#__field__].is_null() && data[#__field__].is_string()) \
 	{ \
 		auto asset##__field__ = data[#__field__].get<std::string>(); \
@@ -67,50 +74,50 @@ namespace ZoneTool
 
 		void parse_statetimers(StateTimers* weapon, Json& data)
 		{
-			WEAPON_READ_FIELD(int,  iFireDelay);
-			WEAPON_READ_FIELD(int,  iMeleeDelay);
-			WEAPON_READ_FIELD(int,  meleeChargeDelay);
-			WEAPON_READ_FIELD(int,  iDetonateDelay);
-			WEAPON_READ_FIELD(int,  iRechamberTime);
-			WEAPON_READ_FIELD(int,  rechamberTimeOneHanded);
-			WEAPON_READ_FIELD(int,  iRechamberBoltTime);
-			WEAPON_READ_FIELD(int,  iHoldFireTime);
-			WEAPON_READ_FIELD(int,  iDetonateTime);
-			WEAPON_READ_FIELD(int,  iMeleeTime);
-			WEAPON_READ_FIELD(int,  meleeChargeTime);
-			WEAPON_READ_FIELD(int,  iReloadTime);
-			WEAPON_READ_FIELD(int,  reloadShowRocketTime);
-			WEAPON_READ_FIELD(int,  iReloadEmptyTime);
-			WEAPON_READ_FIELD(int,  iReloadAddTime);
-			WEAPON_READ_FIELD(int,  iReloadStartTime);
-			WEAPON_READ_FIELD(int,  iReloadStartAddTime);
-			WEAPON_READ_FIELD(int,  iReloadEndTime);
-			WEAPON_READ_FIELD(int,  iDropTime);
-			WEAPON_READ_FIELD(int,  iRaiseTime);
-			WEAPON_READ_FIELD(int,  iAltDropTime);
-			WEAPON_READ_FIELD(int,  quickDropTime);
-			WEAPON_READ_FIELD(int,  quickRaiseTime);
-			WEAPON_READ_FIELD(int,  iBreachRaiseTime);
-			WEAPON_READ_FIELD(int,  iEmptyRaiseTime);
-			WEAPON_READ_FIELD(int,  iEmptyDropTime);
-			WEAPON_READ_FIELD(int,  sprintInTime);
-			WEAPON_READ_FIELD(int,  sprintLoopTime);
-			WEAPON_READ_FIELD(int,  sprintOutTime);
-			WEAPON_READ_FIELD(int,  stunnedTimeBegin);
-			WEAPON_READ_FIELD(int,  stunnedTimeLoop);
-			WEAPON_READ_FIELD(int,  stunnedTimeEnd);
-			WEAPON_READ_FIELD(int,  nightVisionWearTime);
-			WEAPON_READ_FIELD(int,  nightVisionWearTimeFadeOutEnd);
-			WEAPON_READ_FIELD(int,  nightVisionWearTimePowerUp);
-			WEAPON_READ_FIELD(int,  nightVisionRemoveTime);
-			WEAPON_READ_FIELD(int,  nightVisionRemoveTimePowerDown);
-			WEAPON_READ_FIELD(int,  nightVisionRemoveTimeFadeInStart);
-			WEAPON_READ_FIELD(int,  fuseTime);
-			WEAPON_READ_FIELD(int,  aiFuseTime);
-			WEAPON_READ_FIELD(int,  blastFrontTime);
-			WEAPON_READ_FIELD(int,  blastRightTime);
-			WEAPON_READ_FIELD(int,  blastBackTime);
-			WEAPON_READ_FIELD(int,  blastLeftTime);
+			WEAPON_READ_FIELD(int, iFireDelay);
+			WEAPON_READ_FIELD(int, iMeleeDelay);
+			WEAPON_READ_FIELD(int, meleeChargeDelay);
+			WEAPON_READ_FIELD(int, iDetonateDelay);
+			WEAPON_READ_FIELD(int, iRechamberTime);
+			WEAPON_READ_FIELD(int, rechamberTimeOneHanded);
+			WEAPON_READ_FIELD(int, iRechamberBoltTime);
+			WEAPON_READ_FIELD(int, iHoldFireTime);
+			WEAPON_READ_FIELD(int, iDetonateTime);
+			WEAPON_READ_FIELD(int, iMeleeTime);
+			WEAPON_READ_FIELD(int, meleeChargeTime);
+			WEAPON_READ_FIELD(int, iReloadTime);
+			WEAPON_READ_FIELD(int, reloadShowRocketTime);
+			WEAPON_READ_FIELD(int, iReloadEmptyTime);
+			WEAPON_READ_FIELD(int, iReloadAddTime);
+			WEAPON_READ_FIELD(int, iReloadStartTime);
+			WEAPON_READ_FIELD(int, iReloadStartAddTime);
+			WEAPON_READ_FIELD(int, iReloadEndTime);
+			WEAPON_READ_FIELD(int, iDropTime);
+			WEAPON_READ_FIELD(int, iRaiseTime);
+			WEAPON_READ_FIELD(int, iAltDropTime);
+			WEAPON_READ_FIELD(int, quickDropTime);
+			WEAPON_READ_FIELD(int, quickRaiseTime);
+			WEAPON_READ_FIELD(int, iBreachRaiseTime);
+			WEAPON_READ_FIELD(int, iEmptyRaiseTime);
+			WEAPON_READ_FIELD(int, iEmptyDropTime);
+			WEAPON_READ_FIELD(int, sprintInTime);
+			WEAPON_READ_FIELD(int, sprintLoopTime);
+			WEAPON_READ_FIELD(int, sprintOutTime);
+			WEAPON_READ_FIELD(int, stunnedTimeBegin);
+			WEAPON_READ_FIELD(int, stunnedTimeLoop);
+			WEAPON_READ_FIELD(int, stunnedTimeEnd);
+			WEAPON_READ_FIELD(int, nightVisionWearTime);
+			WEAPON_READ_FIELD(int, nightVisionWearTimeFadeOutEnd);
+			WEAPON_READ_FIELD(int, nightVisionWearTimePowerUp);
+			WEAPON_READ_FIELD(int, nightVisionRemoveTime);
+			WEAPON_READ_FIELD(int, nightVisionRemoveTimePowerDown);
+			WEAPON_READ_FIELD(int, nightVisionRemoveTimeFadeInStart);
+			WEAPON_READ_FIELD(int, fuseTime);
+			WEAPON_READ_FIELD(int, aiFuseTime);
+			WEAPON_READ_FIELD(int, blastFrontTime);
+			WEAPON_READ_FIELD(int, blastRightTime);
+			WEAPON_READ_FIELD(int, blastBackTime);
+			WEAPON_READ_FIELD(int, blastLeftTime);
 			WEAPON_READ_FIELD(int, raiseInterruptableTime);
 			WEAPON_READ_FIELD(int, firstRaiseInterruptableTime);
 			WEAPON_READ_FIELD(int, reloadInterruptableTime);
@@ -464,7 +471,6 @@ namespace ZoneTool
 				weapon->stowTag = SL_AllocString(stowTag);
 			}
 
-
 			weapon->accuracyGraphName[0] = nullptr;
 			weapon->accuracyGraphName[1] = nullptr;
 			weapon->accuracyGraphKnots = nullptr;
@@ -479,6 +485,7 @@ namespace ZoneTool
 
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield gunXModel");
 				auto gunmodel = data["gunXModel"][i].get<std::string>();
 
 				if (!gunmodel.empty())
@@ -492,6 +499,7 @@ namespace ZoneTool
 			}
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield worldXModel");
 				auto gunmodel = data["worldXModel"][i].get<std::string>();
 
 				if (!gunmodel.empty())
@@ -508,11 +516,14 @@ namespace ZoneTool
 			weapon->notetrackSoundMapValues = mem->Alloc<short>(24);
 			for (int i = 0; i < 24; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackSoundMapKeys");
 				auto notetrack = data["notetrackSoundMapKeys"][i].get<std::string>();
 				weapon->notetrackSoundMapKeys[i] = SL_AllocString(notetrack);
 			}
+
 			for (int i = 0; i < 24; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackSoundMapValues");
 				auto notetrack = data["notetrackSoundMapValues"][i].get<std::string>();
 				weapon->notetrackSoundMapValues[i] = SL_AllocString(notetrack);
 			}
@@ -521,17 +532,22 @@ namespace ZoneTool
 			weapon->notetrackRumbleMapValues = mem->Alloc<short>(16);
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackRumbleMapKeys");
 				auto notetrack = data["notetrackRumbleMapKeys"][i].get<std::string>();
 				weapon->notetrackRumbleMapKeys[i] = SL_AllocString(notetrack);
 			}
+
 			for (int i = 0; i < 16; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield notetrackRumbleMapValues");
 				auto notetrack = data["notetrackRumbleMapValues"][i].get<std::string>();
 				weapon->notetrackRumbleMapValues[i] = SL_AllocString(notetrack);
 			}
 
 			for (int i = 0; i < 48; i++)
 			{
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield sounds");
+
 				auto sound = data["sounds"][i].get<std::string>();
 
 				if (!sound.empty())
@@ -545,6 +561,8 @@ namespace ZoneTool
 			}
 
 			if (data.contains("szXAnimsLeftHanded") && data["szXAnimsLeftHanded"].is_array()) {
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield szXAnimsLeftHanded");
+
 				weapon->szXAnimsLeftHanded = mem->Alloc<const char*>(42);
 
 				for (int i = 0; i < 42; i++) {
@@ -561,6 +579,8 @@ namespace ZoneTool
 			}
 
 			if (data.contains("szXAnimsRightHanded") && data["szXAnimsRightHanded"].is_array()) {
+				ZONETOOL_WEAPONINFO("Parsing Weaponfield szXAnimsRightHanded");
+
 				weapon->szXAnimsRightHanded = mem->Alloc<const char*>(42);
 
 				for (int i = 0; i < 42; i++) {
@@ -577,6 +597,8 @@ namespace ZoneTool
 				weapon->szXAnimsRightHanded = nullptr;
 			}
 
+			ZONETOOL_INFO("Weapon File Completed!");
+
 			return weapon;
 		}
 
@@ -591,7 +613,7 @@ namespace ZoneTool
 				return nullptr;
 			}
 
-			ZONETOOL_INFO("Parsing weapon \"%s\"...", name.data());
+			ZONETOOL_INFO("Parsing Weapon \"%s\"...", name.data());
 
 			auto weapon = mem->Alloc<WeaponCompleteDef>();
 
@@ -647,7 +669,7 @@ namespace ZoneTool
 			WEAPON_READ_FIELD(int, ammoDropStockMax);
 			WEAPON_READ_FIELD(float, adsDofStart);
 			WEAPON_READ_FIELD(float, adsDofEnd);
-			WEAPON_READ_FIELD_ARR(unsigned __int16,  accuracyGraphKnotCount, 2);
+			WEAPON_READ_FIELD_ARR(unsigned __int16, accuracyGraphKnotCount, 2);
 			WEAPON_READ_FIELD(bool, motionTracker);
 			WEAPON_READ_FIELD(bool, enhanced);
 			WEAPON_READ_FIELD(bool, dpadIconShowsAmmo);
@@ -736,6 +758,7 @@ namespace ZoneTool
 			if (weapon->numSoundOverrides)
 			{
 				weapon->soundOverrides = mem->Alloc<SoundOverrideEntry>(weapon->numSoundOverrides);
+
 				for (int i = 0; i < weapon->numSoundOverrides; i++)
 				{
 					weapon->soundOverrides[i].altmodeSound = (data["soundOverrides"][i]["altmodeSound"].is_string())
@@ -782,11 +805,12 @@ namespace ZoneTool
 			if (weapon->numReloadStateTimerOverrides)
 			{
 				weapon->reloadOverrides = mem->Alloc<ReloadStateTimerEntry>(weapon->numReloadStateTimerOverrides);
+
 				for (int i = 0; i < weapon->numReloadStateTimerOverrides; i++)
 				{
-					weapon->reloadOverrides[i].attachment = data["attachment"].get<int>();
-					weapon->reloadOverrides[i].reloadAddTime = data["reloadAddTime"].get<int>();
-					weapon->reloadOverrides[i].reloadEmptyAddTime = data["reloadEmptyAddTime"].get<int>();
+					weapon->reloadOverrides[i].attachment = data["reloadOverrides"][i]["attachment"].get<int>();
+					weapon->reloadOverrides[i].reloadAddTime = data["reloadOverrides"][i]["reloadAddTime"].get<int>();
+					weapon->reloadOverrides[i].reloadEmptyAddTime = data["reloadOverrides"][i]["reloadEmptyAddTime"].get<int>();
 				}
 			}
 
@@ -840,7 +864,7 @@ namespace ZoneTool
 					{
 						weapon->notetrackOverrides[i].notetrackSoundMapKeys = mem->Alloc<short>(24);
 						memcpy(weapon->notetrackOverrides[i].notetrackSoundMapKeys,
-						       this->asset_->notetrackOverrides[i].notetrackSoundMapKeys, sizeof(short) * 24);
+							this->asset_->notetrackOverrides[i].notetrackSoundMapKeys, sizeof(short) * 24);
 
 						for (int nt = 0; nt < 24; nt++)
 						{
@@ -857,7 +881,7 @@ namespace ZoneTool
 					{
 						weapon->notetrackOverrides[i].notetrackSoundMapValues = mem->Alloc<short>(24);
 						memcpy(weapon->notetrackOverrides[i].notetrackSoundMapValues,
-						       this->asset_->notetrackOverrides[i].notetrackSoundMapValues, sizeof(short) * 24);
+							this->asset_->notetrackOverrides[i].notetrackSoundMapValues, sizeof(short) * 24);
 
 						for (int nt = 0; nt < 24; nt++)
 						{
@@ -953,10 +977,10 @@ namespace ZoneTool
 					}
 				}
 			}
-			
+
 			for (auto i = 0u; i < 48; i++)
 			{
-				 WEAPON_SUBASSET(sounds[i], sound, snd_alias_list_t);
+				WEAPON_SUBASSET(sounds[i], sound, snd_alias_list_t);
 			}
 
 			if (data->bounceSound)
@@ -965,7 +989,7 @@ namespace ZoneTool
 				{
 					if (data->bounceSound[i])
 					{
-						 zone->add_asset_of_type(sound, data->bounceSound[i]->name);
+						zone->add_asset_of_type(sound, data->bounceSound[i]->name);
 					}
 				}
 			}
@@ -976,7 +1000,7 @@ namespace ZoneTool
 				{
 					if (data->rollingSound[i])
 					{
-						 zone->add_asset_of_type(sound, data->rollingSound[i]->name);
+						zone->add_asset_of_type(sound, data->rollingSound[i]->name);
 					}
 				}
 			}
@@ -1069,7 +1093,7 @@ namespace ZoneTool
 				{
 					zone->add_asset_of_type(attachment, this->asset_->scopes[i]->szInternalName);
 				}
-				
+
 			}
 
 			for (auto i = 0u; i < 3; i++)
@@ -1108,15 +1132,15 @@ namespace ZoneTool
 			{
 				for (int i = 0; i < data->numFXOverrides; i++)
 				{
-					 if (data->fxOverrides[i].overrideFX)
-					 {
-					 	zone->add_asset_of_type(fx, data->fxOverrides[i].overrideFX->name);
-					 }
+					if (data->fxOverrides[i].overrideFX)
+					{
+						zone->add_asset_of_type(fx, data->fxOverrides[i].overrideFX->name);
+					}
 
-					 if (data->fxOverrides[i].altmodeFX)
-					 {
-					 	zone->add_asset_of_type(fx, data->fxOverrides[i].altmodeFX->name);
-					 }
+					if (data->fxOverrides[i].altmodeFX)
+					{
+						zone->add_asset_of_type(fx, data->fxOverrides[i].altmodeFX->name);
+					}
 				}
 			}
 
@@ -1171,7 +1195,7 @@ namespace ZoneTool
 		}
 
 		void IWeaponDef::write_WeaponDef(IZone* zone, ZoneBuffer* buf, WeaponCompleteDef* complete,
-		                                 WeaponDef* data)
+			WeaponDef* data)
 		{
 			auto dest = buf->write(data);
 
@@ -1191,7 +1215,7 @@ namespace ZoneTool
 					{
 						destModels[i] = reinterpret_cast<XModel*>(
 							zone->get_asset_pointer(xmodel, destModels[i]->name)
-						);
+							);
 					}
 				}
 
@@ -1203,7 +1227,7 @@ namespace ZoneTool
 			{
 				dest->handXModel = reinterpret_cast<XModel*>(
 					zone->get_asset_pointer(xmodel, data->handXModel->name)
-				);
+					);
 			}
 
 			if (data->szXAnimsRightHanded)
@@ -1331,7 +1355,7 @@ namespace ZoneTool
 					{
 						destModels[i] = reinterpret_cast<XModel*>(
 							zone->get_asset_pointer(xmodel, destModels[i]->name)
-						);
+							);
 					}
 				}
 
@@ -1476,7 +1500,7 @@ namespace ZoneTool
 			WEAPON_SOUND_CUSTOM(missileConeSoundAlias);
 			WEAPON_SOUND_CUSTOM(missileConeSoundAliasAtBase);
 		}
-		
+
 		void IWeaponDef::write(IZone* zone, ZoneBuffer* buf)
 		{
 			auto* data = this->asset_;
@@ -1661,14 +1685,14 @@ namespace ZoneTool
 			{
 				dest->killIcon = reinterpret_cast<Material*>(
 					zone->get_asset_pointer(material, dest->killIcon->name)
-				);
+					);
 			}
 
 			if (data->dpadIcon)
 			{
 				dest->dpadIcon = reinterpret_cast<Material*>(
 					zone->get_asset_pointer(material, dest->dpadIcon->name)
-				);
+					);
 			}
 
 			if (data->accuracyGraphKnots[0])
@@ -2024,7 +2048,7 @@ namespace ZoneTool
 			WEAPON_DUMP_FIELD(sprintDurationScale);
 			WEAPON_DUMP_FIELD(fAdsZoomInFrac);
 			WEAPON_DUMP_FIELD(fAdsZoomOutFrac);
-			
+
 			data["overlay"] = dump_overlay(&asset->overlay);
 
 			WEAPON_DUMP_FIELD(overlayInterface);

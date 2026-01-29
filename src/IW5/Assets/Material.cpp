@@ -423,7 +423,15 @@ namespace ZoneTool
 			if (mat->techniqueSet)
 			{
 				auto* statebits = ITechset::parse_statebits(mat->techniqueSet->name, mem);
-				memcpy(mat->stateBitsEntry, statebits, sizeof mat->stateBitsEntry);
+
+				if (statebits)
+				{
+					memcpy(mat->stateBitsEntry, statebits, sizeof(mat->stateBitsEntry));
+				}
+				else
+				{
+					memset(mat->stateBitsEntry, 0, sizeof(mat->stateBitsEntry));
+				}
 			}
 
 			auto max_state_index = 0;
@@ -611,6 +619,8 @@ namespace ZoneTool
 
 		void IMaterial::dump(Material* asset)
 		{
+			ZONETOOL_INFO("Dumping Material %s", asset->name);
+
 			if (asset && asset->techniqueSet)
 			{
 				ITechset::dump_statebits(asset->techniqueSet->name, asset->stateBitsEntry);

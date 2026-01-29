@@ -168,19 +168,48 @@ namespace ZoneTool
 		static_assert(sizeof(*this) == __size__, __FUNCTION__": Invalid struct size.\n"); \
 	}
 
-#define ZONETOOL_INFO(__FMT__,...) \
-	printf("[ INFO ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__)
+// Simple helper to set console color
+inline void SetColor(WORD color)
+{
+	static HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+	SetConsoleTextAttribute(hConsole, color);
+}
 
-#define ZONETOOL_ERROR(__FMT__,...) \
-	printf("[ ERROR ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__)
+inline int GetColorByContent(const char* fmt, int defaultColor) {
+	std::string s(fmt);
 
-#define ZONETOOL_FATAL(__FMT__,...) \
-	printf("[ FATAL ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__); \
-	MessageBoxA(nullptr, &va("Oops! An unexpected error occured. Error was: " __FMT__ "\n\nZoneTool must be restarted to resolve the error. Last error code reported by windows: 0x%08X (%u)", __VA_ARGS__, GetLastError(), GetLastError())[0], nullptr, 0); \
-	std::exit(0)
+	if (s.find("ISound") != std::string::npos) return 10;
+	if (s.find("ITechset") != std::string::npos) return 11;
+	if (s.find("IMaterial") != std::string::npos) return 13;
+	if (s.find("IXModel") != std::string::npos) return 3;
+	if (s.find("IXAnimParts") != std::string::npos) return 2;
+	if (s.find("IFxEffectDef") != std::string::npos) return 6;
+	if (s.find("Weaponfield") != std::string::npos ||
+		s.find("IXSurface") != std::string::npos) return 8;
+	if (s.find("IStringTable") != std::string::npos) return 14;
+	if (s.find("UI_ParseMenuInternal") != std::string::npos) return 9;
 
-#define ZONETOOL_WARNING(__FMT__,...) \
-	printf("[ WARNING ][ " __FUNCTION__ " ]: " __FMT__ "\n", __VA_ARGS__)
+	return defaultColor;
+}
+
+inline const char* CleanFuncName(const char* name) {
+	if (strncmp(name, "ZoneTool::IW5::", 15) == 0) return name + 15;
+	return name;
+}
+
+#define ZONETOOL_LOG(color, tag, __FMT__, ...) \
+    do { \
+        SetColor(GetColorByContent(__FUNCTION__, color)); \
+        printf("[%-11s] | %-25s | " __FMT__ "\n", tag, CleanFuncName(__FUNCTION__), __VA_ARGS__); \
+        SetColor(15); \
+    } while(0)
+
+// Standardizing the calls
+#define ZONETOOL_INFO(__FMT__, ...)        ZONETOOL_LOG(15, "INFO", __FMT__, __VA_ARGS__)
+#define ZONETOOL_WARNING(__FMT__, ...)     ZONETOOL_LOG(14, "WARNING", __FMT__, __VA_ARGS__)
+#define ZONETOOL_WEAPONINFO(__FMT__, ...)  ZONETOOL_LOG(9,  "WEAPONFIELD", __FMT__, __VA_ARGS__)
+#define ZONETOOL_ERROR(__FMT__, ...)       ZONETOOL_LOG(79,  "ERROR", __FMT__, __VA_ARGS__)
+#define ZONETOOL_FATAL(__FMT__, ...)       ZONETOOL_LOG(79,  "FATAL", __FMT__, __VA_ARGS__)
 
 /*
  *	Debugging purposes

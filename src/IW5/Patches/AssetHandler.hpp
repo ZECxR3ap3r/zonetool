@@ -40,6 +40,8 @@ namespace ZoneTool
 
 			static std::unordered_map<std::int32_t, std::function<void*(void*)>> DuplicateAssetHandlers;
 
+			static std::vector<std::pair<std::string, std::string>> assetList;
+
 			static bool verify;
 			static bool dump;
 

@@ -14,19 +14,19 @@ namespace ZoneTool
 	namespace IW5
 	{
 		MaterialTechnique* ITechset::parse_technique(const std::string& name, ZoneMemory* mem,
-		                                                std::uint32_t index)
+			std::uint32_t index)
 		{
 			const auto path = "techsets\\" + name + ".technique";
 			if (!FileSystem::FileExists(path))
 			{
-				ZONETOOL_FATAL("technique \"%s\" is missing.", name.data());
+				ZONETOOL_WARNING("technique \"%s\" is missing.", name.data());
 				return nullptr;
 			}
 
 			AssetReader reader(mem);
 			if (!reader.open(path))
 			{
-				ZONETOOL_FATAL("technique \"%s\" is missing.", name.data());
+				ZONETOOL_WARNING("technique \"%s\" is missing.", name.data());
 				return nullptr;
 			}
 
@@ -73,12 +73,12 @@ namespace ZoneTool
 			}
 
 			reader.close();
-			
+
 			return asset;
 		}
 
 		MaterialTechniqueSet* ITechset::parse(const std::string& name,
-		                                      ZoneMemory* mem)
+			ZoneMemory* mem)
 		{
 			const auto path = "techsets\\" + name + ".techset";
 
@@ -102,9 +102,9 @@ namespace ZoneTool
 			}
 
 			asset->remappedTechniques = nullptr;
-			
+
 			reader.close();
-			
+
 			return asset;
 		}
 
@@ -120,13 +120,13 @@ namespace ZoneTool
 
 				if (DB_IsXAssetDefault(this->type(), this->name().data()))
 				{
-					ZONETOOL_FATAL("Techset %s not found.", &name[0]);
+					ZONETOOL_WARNING("Techset %s not found.", &name[0]);
 				}
 			}
 		}
 
 		void ITechset::prepare(ZoneBuffer* buf,
-		                       ZoneMemory* mem)
+			ZoneMemory* mem)
 		{
 		}
 
@@ -139,7 +139,7 @@ namespace ZoneTool
 				if (data->techniques[technique])
 				{
 					for (std::int32_t pass = 0; pass < data->techniques[technique]
-					                                   ->hdr.passCount; pass++)
+						->hdr.passCount; pass++)
 					{
 						auto& techniquePass = data->techniques[technique]->pass[pass];
 
@@ -184,15 +184,6 @@ namespace ZoneTool
 			dest->name = buf->write_str(this->name());
 			dest->remappedTechniques = nullptr;
 
-//#ifdef DEBUG
-//			if (IsDebuggerPresent() && data->techniques[5] == nullptr && data->techniques[9] == nullptr)
-//			{
-//				__debugbreak();
-//			}
-//#endif
-//			
-//			assert(data->techniques[5] != nullptr || data->techniques[9] != nullptr);
-			
 			for (auto technique = 0; technique < 54; technique++)
 			{
 				if (!data->techniques[technique])
@@ -233,14 +224,14 @@ namespace ZoneTool
 					{
 						buf->align(3);
 						auto destArgs = buf->write(technique_passes[pass].argumentDef,
-						                           technique_passes[pass].perPrimArgCount +
-						                           technique_passes[pass].perObjArgCount +
-						                           technique_passes[pass].stableArgCount);
+							technique_passes[pass].perPrimArgCount +
+							technique_passes[pass].perObjArgCount +
+							technique_passes[pass].stableArgCount);
 
 						for (auto arg = 0; arg <
-						     technique_passes[pass].perPrimArgCount +
-						     technique_passes[pass].perObjArgCount +
-						     technique_passes[pass].stableArgCount; arg++)
+							technique_passes[pass].perPrimArgCount +
+							technique_passes[pass].perObjArgCount +
+							technique_passes[pass].stableArgCount; arg++)
 						{
 							auto curArg = &technique_passes[pass].argumentDef[arg];
 
@@ -273,7 +264,7 @@ namespace ZoneTool
 		void ITechset::dump_technique(MaterialTechnique* asset)
 		{
 			auto path = "techsets\\"s + asset->hdr.name + ".technique";
-			
+
 			AssetDumper dumper;
 			if (!dumper.open(path))
 			{
@@ -284,7 +275,7 @@ namespace ZoneTool
 			dumper.dump_array(asset->pass, asset->hdr.passCount);
 
 			dumper.dump_string(asset->hdr.name);
-			
+
 			for (short i = 0; i < asset->hdr.passCount; i++)
 			{
 				if (asset->pass[i].pixelShader)
@@ -324,7 +315,7 @@ namespace ZoneTool
 		char* ITechset::parse_statebits(const std::string& techset, ZoneMemory* mem)
 		{
 			auto statebits = mem->Alloc<char>(54);
-			
+
 			auto path = "techsets\\" + techset + ".statebits";
 			auto fp = FileSystem::FileOpen(path, "rb");
 
@@ -336,15 +327,15 @@ namespace ZoneTool
 				return statebits;
 			}
 
-			ZONETOOL_FATAL("statebits for techset \"%s\" are missing!", techset.data());
+			ZONETOOL_ERROR("statebits for techset \"%s\" are missing!", techset.data());
 			return nullptr;
 		}
-		
+
 		void ITechset::dump_statebits(const std::string& techset, char* statebits)
 		{
 			auto path = "techsets\\" + techset + ".statebits";
 			auto fp = FileSystem::FileOpen(path, "wb");
-			
+
 			if (fp)
 			{
 				fwrite(statebits, 54, 1, fp);
@@ -355,7 +346,7 @@ namespace ZoneTool
 		void ITechset::dump_technique_data(MaterialTechniqueSet* asset, bool is_iw5)
 		{
 			std::filesystem::create_directories("techsets/techniques");
-			
+
 			for (int i = 0; i < 54; i++)
 			{
 				if (!asset->techniques[i])
@@ -379,7 +370,7 @@ namespace ZoneTool
 						nlohmann::json arg;
 
 						arg["type"] = current_arg->type;
-						
+
 						if (current_arg->type == 1 || current_arg->type == 8)
 						{
 							arg["value"][0] = current_arg->u.literalConst[0];
@@ -400,7 +391,7 @@ namespace ZoneTool
 
 						arg_array.push_back(arg);
 					}
-					
+
 					pass["perObjArgCount"] = current_pass->perObjArgCount;
 					pass["perPrimArgCount"] = current_pass->perPrimArgCount;
 					pass["stableArgCount"] = current_pass->stableArgCount;
@@ -408,25 +399,25 @@ namespace ZoneTool
 					pass["vertexShader"] = current_pass->vertexShader ? current_pass->vertexShader->name : "";
 					pass["vertexDecl"] = current_pass->vertexDecl ? current_pass->vertexDecl->name : "";
 					pass["args"] = arg_array;
-					
+
 					pass_array.push_back(pass);
 				}
-				
+
 				nlohmann::json json;
 				json["name"] = technique->hdr.name;
 				json["index"] = i;
 				json["flags"] = technique->hdr.flags;
 				json["passCount"] = technique->hdr.passCount;
 				json["pass"] = pass_array;
-				
+
 				auto meme = json.dump();
-				
+
 				auto fp = fopen(va("techsets/techniques/%s.%s.json", technique->hdr.name, is_iw5 ? "iw5" : "iw4").data(), "wb");
 				fwrite(meme.data(), meme.size(), 1, fp);
 				fclose(fp);
 			}
 		}
-		
+
 		void yeet(MaterialTechniqueSet* asset)
 		{
 			auto path = "techsets\\"s + asset->name + ".techset.txt";
@@ -451,9 +442,9 @@ namespace ZoneTool
 		void ITechset::dump(MaterialTechniqueSet* asset)
 		{
 			yeet(asset);
-			
+
 			auto path = "techsets\\"s + asset->name + ".techset";
-			
+
 			AssetDumper dumper;
 			if (!dumper.open(path))
 			{

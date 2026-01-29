@@ -272,7 +272,7 @@ namespace ZoneTool::CODO
 
 		fastfile.write(buf_compressed.data(), buf_compressed.size());
 
-		fastfile.save("zone\\english\\" + this->name_ + ".ff");
+		fastfile.save("zone\\english\\mod.ff");
 
 		ZONETOOL_INFO("Successfully compiled fastfile \"%s\"!", this->name_.data());
 		ZONETOOL_INFO("Compiling took %u msec.", GetTickCount64() - startTime);

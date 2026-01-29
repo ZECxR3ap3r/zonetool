@@ -16,6 +16,7 @@ namespace ZoneTool
 		bool isDumping = false;
 		bool isVerifying = false;
 		auto currentDumpingZone = ""s;
+		std::vector<std::pair<std::string, std::string>> assetList;
 
 		FILE* csvFile;
 
@@ -120,11 +121,11 @@ namespace ZoneTool
 					csvFile = FileSystem::FileOpen(FileSystem::GetFastFile() + ".csv", "wb");
 				}
 
-				// dump assets to disk
 				if (csvFile)
 				{
 					auto xassettypes = reinterpret_cast<char**>(0x00726840);
-					fprintf(csvFile, "%s,%s\n", xassettypes[asset->type], GetAssetName(asset));
+
+					assetList.emplace_back(xassettypes[asset->type], GetAssetName(asset));
 				}
 
 				if (asset->type == rawfile && GetAssetName(asset) == currentDumpingZone)
@@ -152,6 +153,26 @@ namespace ZoneTool
 						ZONETOOL_INFO("Dumping additional asset \"%s\" because it is referenced by %s.", asset_name, currentDumpingZone.data());
 
 						HandleAsset(&asset);
+					}
+
+					if (csvFile) {
+						std::sort(assetList.begin(), assetList.end(), [](auto& a, auto& b) {
+							if (a.first == b.first)
+								return a.second < b.second;
+							return a.first < b.first;
+							});
+
+						std::string lastType;
+						for (auto& asset : assetList)
+						{
+							if (!lastType.empty() && lastType != asset.first)
+								fprintf(csvFile, "\n");
+
+							fprintf(csvFile, "%s,%s\n", asset.first.c_str(), asset.second.c_str());
+							lastType = asset.first;
+						}
+
+						fflush(csvFile);
 					}
 
 					ZONETOOL_INFO("Zone \"%s\" dumped.", &fastfile[0]);
@@ -186,21 +207,22 @@ if (asset->type == __TYPE__) \
 }
 					try
 					{
-						// DECLARE_ASSET(image, IGfxImage);
+						DECLARE_ASSET(image, IGfxImage);
 						DECLARE_ASSET(xmodel, IXModel);
 						DECLARE_ASSET(material, IMaterial);
 						DECLARE_ASSET(xanim, IXAnimParts);
-						DECLARE_ASSET(techset, ITechset);
+						//DECLARE_ASSET(techset, ITechset);
 						DECLARE_ASSET(loaded_sound, ILoadedSound);
 						DECLARE_ASSET(sound, ISound);
 						DECLARE_ASSET(fx, IFxEffectDef);
-						DECLARE_ASSET(font, IFontDef);
+						//DECLARE_ASSET(font, IFontDef);
 						DECLARE_ASSET(gfx_map, IGfxWorld);
 						DECLARE_ASSET(col_map_mp, IClipMap);
 						DECLARE_ASSET(map_ents, IMapEnts);
 						DECLARE_ASSET(com_map, IComWorld);
 						DECLARE_ASSET(game_map_mp, IGameWorldMp);
-						DECLARE_ASSET(rawfile, IRawFile);
+						//DECLARE_ASSET(menu, IMenuDef);
+						//DECLARE_ASSET(rawfile, IRawFile);
 					}
 					catch (std::exception& ex)
 					{

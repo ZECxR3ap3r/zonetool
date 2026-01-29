@@ -382,7 +382,7 @@ namespace ZoneTool
 
 		void IFxEffectDef::dump(FxEffectDef* asset)
 		{
-			auto* iw5_fx = new IW5::FxEffectDef;
+			/*auto* iw5_fx = new IW5::FxEffectDef;
 			memcpy(iw5_fx, asset, sizeof FxEffectDef);
 			memset(iw5_fx->pad, 0, sizeof iw5_fx->pad);
 
@@ -400,7 +400,7 @@ namespace ZoneTool
 			IW5::IFxEffectDef::dump(iw5_fx);
 
 			delete[] iw5_fx->elemDefs;
-			delete iw5_fx;
+			delete iw5_fx;*/
 		}
 	}
 }

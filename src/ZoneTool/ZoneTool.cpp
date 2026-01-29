@@ -69,12 +69,12 @@ namespace ZoneTool
 	}
 
 	void add_assets_using_iterator(const std::string& fastfile, const std::string& type, const std::string& folder,
-	                            const std::string& extension, bool skip_reference, IZone* zone)
+		const std::string& extension, bool skip_reference, IZone* zone)
 	{
 		if (std::filesystem::is_directory("zonetool\\" + fastfile + "\\" + folder))
 		{
 			for (auto& file : std::filesystem::recursive_directory_iterator(
-				     "zonetool\\" + fastfile + "\\" + folder))
+				"zonetool\\" + fastfile + "\\" + folder))
 			{
 				if (is_regular_file(file))
 				{
@@ -82,22 +82,65 @@ namespace ZoneTool
 
 					if (skip_reference && filename[0] == ',')
 					{
-						// skip this file
 						continue;
 					}
 
-					// check if the filename contains the correct extension
 					if (filename.length() > extension.length() &&
 						filename.substr(filename.length() - extension.length()) == extension)
 					{
-						// remove the extension
 						filename = filename.substr(0, filename.length() - extension.length());
 
-						// add asset to disk
 						zone->add_asset_of_type(type, filename);
 					}
 				}
 			}
+		}
+	}
+
+	void add_assets_with_relative_path(const std::string& fastfile,
+		const std::string& type,
+		const std::string& folder,
+		const std::string& extension,
+		bool skip_reference,
+		IZone* zone,
+		bool includeFolderInName = true)
+	{
+		std::string baseFolder = type + "s";
+		std::filesystem::path basePath = std::filesystem::path("zonetool") / fastfile / baseFolder / folder;
+
+		if (!std::filesystem::is_directory(basePath))
+		{
+			ZONETOOL_INFO("Folder does not exist: %s\n", basePath.string().c_str());
+			return;
+		}
+
+		for (auto& file : std::filesystem::recursive_directory_iterator(basePath))
+		{
+			if (!std::filesystem::is_regular_file(file))
+				continue;
+
+			std::filesystem::path relativePath = std::filesystem::relative(file.path(), basePath);
+
+			std::string assetName;
+			if (includeFolderInName || type == "material")
+				assetName = (std::filesystem::path(folder) / relativePath).string();
+			else
+				assetName = relativePath.string();
+
+			std::replace(assetName.begin(), assetName.end(), '\\', '/');
+
+			if (skip_reference && !assetName.empty() && assetName[0] == ',')
+				continue;
+
+			if (!extension.empty() && assetName.length() > extension.length() &&
+				assetName.substr(assetName.length() - extension.length()) == extension)
+			{
+				assetName = assetName.substr(0, assetName.length() - extension.length());
+			}
+
+			ZONETOOL_INFO("Folder Parsing: %s", assetName.c_str());
+
+			zone->add_asset_of_type(type, assetName);
 		}
 	}
 
@@ -265,6 +308,13 @@ namespace ZoneTool
 		return false;
 	}
 
+	std::string get_output_filename(const std::string& zone_name) {
+		if (zone_name != "patch_mp" && zone_name != "ui_mp" && !zone_name.starts_with("mp_"))
+			return "mod";
+
+		return zone_name;
+	}
+
 	void parse_csv_file(ILinker* linker, IZone* zone, const std::string& fastfile, const std::string& csv_file)
 	{
 		auto path = "zone_source\\" + csv_file + ".csv";
@@ -300,51 +350,6 @@ namespace ZoneTool
 			{
 				parse_csv_file(linker, zone, fastfile, row->fields_[1]);
 			}
-			// 
-			else if (row->fields_[0] == "target"s)
-			{
-				if (row->fields_[1] == "xbox360"s)
-				{
-					zone->set_target(zone_target::xbox360);
-				}
-				else if (row->fields_[1] == "ps3"s)
-				{
-					zone->set_target(zone_target::ps3);
-				}
-				else if (row->fields_[1] == "pc"s)
-				{
-					zone->set_target(zone_target::pc);
-				}
-				else
-				{
-					ZONETOOL_ERROR("Invalid zone target \"%s\"!", row->fields_[1]);
-				}
-			}
-			//
-			else if (row->fields_[0] == "target_version"s)
-			{
-				auto found_version = false;
-				for (auto i = 0u; i < static_cast<std::size_t>(zone_target_version::max); i++)
-				{
-					if (zone_target_version_str[i] == row->fields_[1])
-					{
-						const auto target_version = static_cast<zone_target_version>(i);
-						if (!linker->supports_version(target_version))
-						{
-							ZONETOOL_FATAL("Current linker (%s) does not support target version %s.", linker->version(), row->fields_[1]);
-						}
-
-						zone->set_target_version(target_version);
-						found_version = true;
-					}
-				}
-
-				if (!found_version)
-				{
-					ZONETOOL_FATAL("Invalid target version \"%s\".", row->fields_[1]);
-				}
-			}
-			// this allows us to reference assets instead of rewriting them
 			else if (row->fields_[0] == "reference"s)
 			{
 				if (row->numOfFields_ >= 2)
@@ -352,50 +357,64 @@ namespace ZoneTool
 					is_referencing = row->fields_[1] == "true"s;
 				}
 			}
-			// add assets that are required for maps
 			else if (row->fields_[0] == "map"s)
 			{
 				zone->add_asset_of_type("techset", "wc_l_hsm_r0c0n0s0");
 			}
-			// this will use a directory iterator to automatically add assets
 			else if (row->fields_[0] == "iterate"s)
 			{
 				try
 				{
-					add_assets_using_iterator(fastfile, "fx", "fx", ".fxe", true, zone);
-					add_assets_using_iterator(fastfile, "xanimparts", "XAnim", ".xae2", true, zone);
-					add_assets_using_iterator(fastfile, "xmodel", "XModel", ".xme6", true, zone);
+					add_assets_using_iterator(FileSystem::GetFastFile(), "fx", "fx", ".fxe", true, zone);
+					add_assets_using_iterator(FileSystem::GetFastFile(), "xanimparts", "XAnim", ".xae2", true, zone);
+					add_assets_using_iterator(FileSystem::GetFastFile(), "xmodel", "XModel", ".xme6", true, zone);
 				}
 				catch (std::exception& ex)
 				{
 					ZONETOOL_FATAL("A fatal exception occured while building zone \"%s\", exception was: %s\n", fastfile.data(), ex.what());
 				}
 			}
-			// this will use a directory iterator to add all techsets
+			else if (row->fields_[0] == "add_folder"s)
+			{
+				try
+				{
+					std::string folder = row->fields_[2];
+
+					if(row->fields_[1] == "material")
+						add_assets_with_relative_path(FileSystem::GetFastFile(), row->fields_[1], folder, "", true, zone, true);
+					else
+						add_assets_with_relative_path(FileSystem::GetFastFile(), row->fields_[1], folder, "", true, zone, false);
+				}
+				catch (const std::exception& ex)
+				{
+					ZONETOOL_FATAL(
+						"A fatal exception occured while building zone \"%s\", exception was: %s\n",
+						fastfile.data(), ex.what()
+					);
+				}
+			}
 			else if (row->fields_[0] == "iterate_techsets"s)
 			{
 				try
 				{
-					add_assets_using_iterator(fastfile, "techset", "techsets", ".techset", true, zone);
+					add_assets_using_iterator(FileSystem::GetFastFile(), "techset", "techsets", ".techset", true, zone);
 				}
 				catch (std::exception& ex)
 				{
 					ZONETOOL_FATAL("A fatal exception occured while building zone \"%s\", exception was: %s\n", fastfile.data(), ex.what());
 				}
 			}
-			// this will force external assets to be used
 			else if (row->fields_[0] == "forceExternalAssets"s)
 			{
 				ZONETOOL_WARNING("forceExternalAssets has been turned on!");
 				FileSystem::ForceExternalAssets(true);
 			}
-			// if entry is not an option, it should be an asset.
 			else
 			{
 				if (row->fields_[0] == "localize"s && row->numOfFields_ >= 2 && 
 					FileSystem::FileExists("localizedstrings/"s + row->fields_[1] + ".str"))
 				{
-					parse_localizedstrings_file(zone, fastfile, "localizedstrings/"s + row->fields_[1] + ".str");
+					parse_localizedstrings_file(zone, FileSystem::GetFastFile(), "localizedstrings/"s + row->fields_[1] + ".str");
 				}
 				else
 				{
@@ -429,45 +448,39 @@ namespace ZoneTool
 		CsvParser_destroy(parser);
 	}
 	
-	void build_zone(ILinker* linker, const std::string& fastfile)
+	void build_zone(ILinker* linker, const std::string& zone_name)
 	{
-		// make sure FS is correct.
-		FileSystem::SetFastFile(fastfile);
+		const std::string output_file = get_output_filename(zone_name);
 
-		ZONETOOL_INFO("Building fastfile \"%s\" for game \"%s\"", fastfile.data(), linker->version());
+		FileSystem::SetFastFile(zone_name);
 
-		auto zone = linker->alloc_zone(fastfile);
+		ZONETOOL_INFO("Building fastfile \"%s\" as output \"%s\" for game \"%s\"", zone_name.c_str(), output_file.c_str(), linker->version());
+
+		auto zone = linker->alloc_zone("mod");
 		if (zone == nullptr)
 		{
-			ZONETOOL_ERROR("An error occured while building fastfile \"%s\": Are you out of memory?", fastfile.data());
+			ZONETOOL_ERROR("An error occurred while building fastfile \"%s\"", zone_name.c_str());
 			return;
 		}
 
-		// set default zone target to PC
 		zone->set_target(zone_target::pc);
 
 		if (linker->version() == "IW4"s)
-		{
 			zone->set_target_version(zone_target_version::iw4_release);
-		}
 		else if (linker->version() == "IW5"s)
-		{
 			zone->set_target_version(zone_target_version::iw5_release);
-		}
-		
-		parse_csv_file(linker, zone.get(), fastfile, fastfile);
 
-		// allocate zone buffer
+		// Parse CSV using the internal zone name
+		parse_csv_file(linker, zone.get(), output_file, zone_name);
+
+		// Allocate zone buffer
 		auto buffer = linker->alloc_buffer();
 
-		// add branding asset
-		zone->add_asset_of_type("rawfile", fastfile);
+		// Branding asset still uses the internal zone name
+		zone->add_asset_of_type("rawfile", output_file);
 
-		// compile zone
+		// Compile the zone (writes to mod.ff instead of zone_name.ff)
 		zone->build(buffer.get());
-
-		// unload fastfiles
-		// linker->UnloadZones();
 	}
 
 	ILinker* current_linker;
@@ -536,7 +549,7 @@ namespace ZoneTool
 		freopen("CONOUT$", "w", stderr);
 
 		// Set console name
-		SetConsoleTitleA("ZoneTool");
+		SetConsoleTitleA("Faggot Tool");
 
 		// Spawn command thread
 		CreateThread(nullptr, 0, reinterpret_cast<LPTHREAD_START_ROUTINE>(command_thread), nullptr, 0, nullptr);
@@ -546,7 +559,7 @@ namespace ZoneTool
 		{
 			ExitProcess(0);
 		});
-		register_command("buildzone"s, [](std::vector<std::string> args)
+		auto buildzone = [](std::vector<std::string> args)
 		{
 			// Check if enough arguments have been passed to the command
 			if (args.size() == 1)
@@ -566,8 +579,11 @@ namespace ZoneTool
 					ZONETOOL_ERROR("Current linker does not support zone building.");
 				}
 			}
-		});
-		register_command("loadzone"s, [](std::vector<std::string> args)
+		};
+		register_command("buildzone"s, buildzone);
+		register_command("bz"s, buildzone);
+
+		auto loadzone = [](std::vector<std::string> args)
 		{
 			// Check if enough arguments have been passed to the command
 			if (args.size() == 1)
@@ -581,7 +597,10 @@ namespace ZoneTool
 			{
 				current_linker->load_zone(args[1]);
 			}
-		});
+		};
+
+		register_command("loadzone"s, loadzone);
+		register_command("lz"s, loadzone);
 		register_command("verifyzone"s, [](std::vector<std::string> args)
 		{
 			// Check if enough arguments have been passed to the command
@@ -634,19 +653,6 @@ namespace ZoneTool
 
 	void branding(ILinker* linker)
 	{
-		ZONETOOL_INFO("ZoneTool initialization complete!");
-		ZONETOOL_INFO("Welcome to ZoneTool v" ZONETOOL_VERSION " written by RektInator.");
-		ZONETOOL_INFO("  \"No matter how hard or unlikely, if it's possible, it will be done.\"");
-		ZONETOOL_INFO("Special thanks to: Laupetin, NTAuthority, momo5502, TheApadayo, localhost, X3RX35 & homura.");
-
-		if (linker)
-		{
-			ZONETOOL_INFO("Initialized linker for game \"%s\"...\n", linker->version());
-		}
-		else
-		{
-			ZONETOOL_ERROR("No linker could be found for the current binary!\n");
-		}
 	}
 
 	std::vector<std::string> get_command_line_arguments()

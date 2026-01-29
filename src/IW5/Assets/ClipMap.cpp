@@ -181,7 +181,7 @@ namespace ZoneTool
 				colmap->dynEntPoseList[i] = mem->Alloc<DynEntityPose>(colmap->dynEntCount[i]);
 				colmap->dynEntClientList[i] = mem->Alloc<DynEntityClient>(colmap->dynEntCount[i]);
 				colmap->dynEntCollList[i] = mem->Alloc<DynEntityColl>(colmap->dynEntCount[i]);
-				
+
 				for (int j = 0; j < colmap->dynEntCount[i]; j++)
 				{
 					colmap->dynEntDefList[i][j] = *read.read_single<DynEntityDef>();
@@ -337,7 +337,7 @@ namespace ZoneTool
 			{
 				cbrushside_t* brush_side;
 				dest->cBrushSides = buf->write_s(3, data->cBrushSides, data->numCBrushSides, sizeof cbrushside_t,
-				                                 &brush_side);
+					&brush_side);
 
 				if (dest->cBrushSides == reinterpret_cast<cbrushside_t*>(-1))
 				{
@@ -364,7 +364,7 @@ namespace ZoneTool
 			{
 				cLeafBrushNode_s* leaf_brush_node = nullptr;
 				dest->cLeafBrushNodes = buf->write_s(3, data->cLeafBrushNodes, data->numCLeafBrushNodes,
-				                                     sizeof cLeafBrushNode_s, &leaf_brush_node);
+					sizeof cLeafBrushNode_s, &leaf_brush_node);
 
 				if (dest->cLeafBrushNodes == reinterpret_cast<cLeafBrushNode_s*>(-1))
 				{
@@ -573,7 +573,7 @@ namespace ZoneTool
 				for (std::int32_t i = 0; i < data->numCModels; i++)
 				{
 					buf->push_stream(0);
-					
+
 					if (data->cModels[i].info)
 					{
 						ClipInfo* destInfo = nullptr;

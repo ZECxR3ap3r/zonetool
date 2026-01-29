@@ -26,6 +26,7 @@ namespace ZoneTool
 
 			std::string name() override;
 			std::int32_t type() override;
+			void write_menu_supporting_data(IZone* zone, ZoneBuffer* buf, ExpressionSupportingData* data);
 			void write_menu_statement(IZone* zone, ZoneBuffer* buf, Statement_s* data);
 			void write_menu_eventhandlerset(IZone* zone, ZoneBuffer* buf, MenuEventHandlerSet* data);
 			void write_menu_itemkeyhandler(IZone* zone, ZoneBuffer* buf, ItemKeyHandler* data);

@@ -135,7 +135,7 @@ namespace ZoneTool
 				asset->cells[i].reflectionProbes = read.read_array<char>();
 				asset->cells[i].reflectionProbeReferences = read.read_array<char>();
 			}
-			
+
 			auto worldDraw = read.read_array<GfxWorldDraw>();
 			memcpy(&asset->worldDraw, worldDraw, sizeof GfxWorldDraw);
 
@@ -502,7 +502,7 @@ namespace ZoneTool
 					{
 						buf->align(3);
 						auto gfx_aabb_tree = buf->write_p(data->aabbTree[i].aabbtree,
-						                                  data->aabbTreeCounts[i].aabbTreeCount);
+							data->aabbTreeCounts[i].aabbTreeCount);
 
 						for (std::int32_t i2 = 0; i2 < data->aabbTreeCounts[i].aabbTreeCount; i2++)
 						{
@@ -556,7 +556,7 @@ namespace ZoneTool
 					{
 						buf->align(0);
 						buf->write(data->cells[i].reflectionProbeReferences,
-						           data->cells[i].reflectionProbeReferenceCount);
+							data->cells[i].reflectionProbeReferenceCount);
 						ZoneBuffer::clear_pointer(&gfx_cell[i].reflectionProbeReferences);
 					}
 
@@ -568,7 +568,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				auto reflectionProbes = buf->write(data->worldDraw.reflectionImages,
-				                                   data->worldDraw.reflectionProbeCount);
+					data->worldDraw.reflectionProbeCount);
 
 				for (std::uint64_t i = 0; i < data->worldDraw.reflectionProbeCount; i++)
 				{
@@ -602,7 +602,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->worldDraw.reflectionProbeReferenceOrigins,
-				           data->worldDraw.reflectionProbeReferenceCount);
+					data->worldDraw.reflectionProbeReferenceCount);
 				ZoneBuffer::clear_pointer(&dest->worldDraw.reflectionProbeReferenceOrigins);
 			}
 			if (data->worldDraw.reflectionProbeReferences)
@@ -688,9 +688,9 @@ namespace ZoneTool
 			{
 				buf->align(1);
 				buf->write_p(data->lightGrid.rowDataStart,
-				             data->lightGrid.maxs[data->lightGrid.rowAxis] - data->lightGrid.mins[data
-				                                                                                  ->lightGrid.rowAxis] +
-				             1);
+					data->lightGrid.maxs[data->lightGrid.rowAxis] - data->lightGrid.mins[data
+					->lightGrid.rowAxis] +
+					1);
 				ZoneBuffer::clear_pointer(&dest->lightGrid.rowDataStart);
 			}
 
@@ -750,7 +750,7 @@ namespace ZoneTool
 			if (data->outdoorImage)
 			{
 				dest->outdoorImage = reinterpret_cast<GfxImage*>(zone->get_asset_pointer(image, data->outdoorImage->name)
-				);
+					);
 			}
 
 			buf->push_stream(2);
@@ -758,7 +758,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->cellCasterBits[0],
-				           data->dpvsPlanes.cellCount * ((data->dpvsPlanes.cellCount + 31) >> 5));
+					data->dpvsPlanes.cellCount * ((data->dpvsPlanes.cellCount + 31) >> 5));
 				ZoneBuffer::clear_pointer(&dest->cellCasterBits[0]);
 			}
 
@@ -787,7 +787,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->primaryLightEntityShadowVis,
-				           (data->primaryLightCount - data->lastSunPrimaryLightIndex - 1) << 15);
+					(data->primaryLightCount - data->lastSunPrimaryLightIndex - 1) << 15);
 				ZoneBuffer::clear_pointer(&dest->primaryLightEntityShadowVis);
 			}
 
@@ -795,8 +795,8 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->primaryLightDynEntShadowVis[0],
-				           data->dpvsDyn.dynEntClientCount[0] * (data->primaryLightCount - data->lastSunPrimaryLightIndex -
-					           1));
+					data->dpvsDyn.dynEntClientCount[0] * (data->primaryLightCount - data->lastSunPrimaryLightIndex -
+						1));
 				ZoneBuffer::clear_pointer(&dest->primaryLightDynEntShadowVis[0]);
 			}
 
@@ -804,8 +804,8 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->primaryLightDynEntShadowVis[1],
-				           data->dpvsDyn.dynEntClientCount[1] * (data->primaryLightCount - data->lastSunPrimaryLightIndex -
-					           1));
+					data->dpvsDyn.dynEntClientCount[1] * (data->primaryLightCount - data->lastSunPrimaryLightIndex -
+						1));
 				ZoneBuffer::clear_pointer(&dest->primaryLightDynEntShadowVis[1]);
 			}
 
@@ -859,7 +859,7 @@ namespace ZoneTool
 							{
 								buf->align(3);
 								buf->write(data->lightRegion[i].hulls[i2].axis,
-								           data->lightRegion[i].hulls[i2].axisCount);
+									data->lightRegion[i].hulls[i2].axisCount);
 								ZoneBuffer::clear_pointer(&light_region_hull[i2].axis);
 							}
 						}
@@ -919,7 +919,7 @@ namespace ZoneTool
 			{
 				buf->align(1);
 				buf->write_p(data->dpvs.sortedSurfIndex,
-				             data->dpvs.staticSurfaceCount + data->dpvs.staticSurfaceCountNoDecal);
+					data->dpvs.staticSurfaceCount + data->dpvs.staticSurfaceCountNoDecal);
 				ZoneBuffer::clear_pointer(&dest->dpvs.sortedSurfIndex);
 			}
 
@@ -994,7 +994,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->dpvsDyn.dynEntCellBits[0],
-				           data->dpvsDyn.dynEntClientWordCount[0] * data->dpvsPlanes.cellCount);
+					data->dpvsDyn.dynEntClientWordCount[0] * data->dpvsPlanes.cellCount);
 				ZoneBuffer::clear_pointer(&dest->dpvsDyn.dynEntCellBits[0]);
 			}
 
@@ -1002,7 +1002,7 @@ namespace ZoneTool
 			{
 				buf->align(3);
 				buf->write(data->dpvsDyn.dynEntCellBits[1],
-				           data->dpvsDyn.dynEntClientWordCount[1] * data->dpvsPlanes.cellCount);
+					data->dpvsDyn.dynEntClientWordCount[1] * data->dpvsPlanes.cellCount);
 				ZoneBuffer::clear_pointer(&dest->dpvsDyn.dynEntCellBits[1]);
 			}
 
@@ -1111,7 +1111,7 @@ namespace ZoneTool
 			write.dump_array(asset->dpvs.surfaceVisData[1], asset->dpvs.staticSurfaceCount);
 			write.dump_array(asset->dpvs.surfaceVisData[2], asset->dpvs.staticSurfaceCount);
 			write.dump_array(asset->dpvs.sortedSurfIndex,
-			            (asset->dpvs.staticSurfaceCount + asset->dpvs.staticSurfaceCountNoDecal));
+				(asset->dpvs.staticSurfaceCount + asset->dpvs.staticSurfaceCountNoDecal));
 			write.dump_array(asset->dpvs.smodelInsts, asset->dpvs.smodelCount);
 			write.dump_array(asset->dpvs.surfaces, asset->indexCount);
 
@@ -1133,9 +1133,9 @@ namespace ZoneTool
 			// dpvsDyn
 			write.dump_array(&asset->dpvsDyn, 1);
 			write.dump_array(asset->dpvsDyn.dynEntCellBits[0],
-			            asset->dpvsDyn.dynEntClientWordCount[0] * asset->dpvsPlanes.cellCount);
+				asset->dpvsDyn.dynEntClientWordCount[0] * asset->dpvsPlanes.cellCount);
 			write.dump_array(asset->dpvsDyn.dynEntCellBits[1],
-			            asset->dpvsDyn.dynEntClientWordCount[1] * asset->dpvsPlanes.cellCount);
+				asset->dpvsDyn.dynEntClientWordCount[1] * asset->dpvsPlanes.cellCount);
 			write.dump_array(asset->dpvsDyn.dynEntVisData[0][0], asset->dpvsDyn.dynEntClientWordCount[0] * 32);
 			write.dump_array(asset->dpvsDyn.dynEntVisData[1][0], asset->dpvsDyn.dynEntClientWordCount[1] * 32);
 			write.dump_array(asset->dpvsDyn.dynEntVisData[0][1], asset->dpvsDyn.dynEntClientWordCount[0] * 32);
@@ -1155,7 +1155,7 @@ namespace ZoneTool
 				for (int j = 0; j < asset->aabbTreeCounts[i].aabbTreeCount; j++)
 				{
 					write.dump_array(asset->aabbTree[i].aabbtree[j].smodelIndexes,
-					            asset->aabbTree[i].aabbtree[j].smodelIndexCount);
+						asset->aabbTree[i].aabbtree[j].smodelIndexCount);
 				}
 			}
 
@@ -1185,7 +1185,7 @@ namespace ZoneTool
 
 			write.dump_array(asset->worldDraw.reflectionProbeReferences, asset->worldDraw.reflectionProbeReferenceCount);
 			write.dump_array(asset->worldDraw.reflectionProbeReferenceOrigins,
-			            asset->worldDraw.reflectionProbeReferenceCount);
+				asset->worldDraw.reflectionProbeReferenceCount);
 
 			write.dump_array(asset->worldDraw.reflectionProbeTextures, asset->worldDraw.reflectionProbeCount);
 			write.dump_array(asset->worldDraw.lightmaps, asset->worldDraw.lightmapCount);
@@ -1209,9 +1209,9 @@ namespace ZoneTool
 			// GfxLightGrid
 			write.dump_array(&asset->lightGrid, 1);
 			write.dump_array(asset->lightGrid.rowDataStart,
-			            (asset->lightGrid.maxs[asset->lightGrid.rowAxis] - asset->lightGrid.mins[asset
-			                                                                                     ->lightGrid.rowAxis] +
-				            1));
+				(asset->lightGrid.maxs[asset->lightGrid.rowAxis] - asset->lightGrid.mins[asset
+					->lightGrid.rowAxis] +
+					1));
 			write.dump_array(asset->lightGrid.rawRowData, asset->lightGrid.rawRowDataSize);
 			write.dump_array(asset->lightGrid.entries, asset->lightGrid.entryCount);
 			write.dump_array(asset->lightGrid.colors, asset->lightGrid.colorCount);
@@ -1245,7 +1245,7 @@ namespace ZoneTool
 
 			// CellcasterBits
 			write.dump_array(asset->cellCasterBits[0],
-			            asset->dpvsPlanes.cellCount * ((asset->dpvsPlanes.cellCount + 31) >> 5));
+				asset->dpvsPlanes.cellCount * ((asset->dpvsPlanes.cellCount + 31) >> 5));
 			write.dump_array(asset->cellCasterBits[1], (asset->dpvsPlanes.cellCount + 31) >> 5);
 
 			// SceneDynModel
@@ -1256,15 +1256,15 @@ namespace ZoneTool
 
 			// PrimaryLightEntityShadowVis
 			write.dump_array(asset->primaryLightEntityShadowVis,
-			            (asset->primaryLightCount - asset->lastSunPrimaryLightIndex - 1) << 15);
+				(asset->primaryLightCount - asset->lastSunPrimaryLightIndex - 1) << 15);
 
 			// PrimaryLightDynEntShadowVis
 			write.dump_array(asset->primaryLightDynEntShadowVis[0],
-			            asset->dpvsDyn.dynEntClientCount[0] * (asset->primaryLightCount - asset->lastSunPrimaryLightIndex -
-				            1));
+				asset->dpvsDyn.dynEntClientCount[0] * (asset->primaryLightCount - asset->lastSunPrimaryLightIndex -
+					1));
 			write.dump_array(asset->primaryLightDynEntShadowVis[1],
-			            asset->dpvsDyn.dynEntClientCount[1] * (asset->primaryLightCount - asset->lastSunPrimaryLightIndex -
-				            1));
+				asset->dpvsDyn.dynEntClientCount[1] * (asset->primaryLightCount - asset->lastSunPrimaryLightIndex -
+					1));
 
 			// PrimaryLightForModelDynEnt
 			write.dump_array(asset->primaryLightForModelDynEnt, asset->dpvsDyn.dynEntClientCount[0]);

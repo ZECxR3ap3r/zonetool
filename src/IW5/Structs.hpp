@@ -1293,15 +1293,15 @@ namespace ZoneTool
 			char firstAdjacentSideOffset;
 			char edgeCount;
 
-            Json ToJson()
-            {
-                Json data;
-                data["plane"] = this->plane->ToJson();
-                data["materialNum"] = this->materialNum;
+			Json ToJson()
+			{
+				Json data;
+				data["plane"] = this->plane->ToJson();
+				data["materialNum"] = this->materialNum;
 				data["firstAdjacentSideOffset"] = this->firstAdjacentSideOffset;
 				data["edgeCount"] = this->edgeCount;
-                return data;
-            }*/
+				return data;
+			}*/
 		};
 
 		struct BrushWrapper
@@ -1440,24 +1440,24 @@ namespace ZoneTool
 #pragma pack(pop)
 
 		// Loaded sound
-        struct _AILSOUNDINFO
-        {
-            int format;
-            const void* data_ptr;
-            unsigned int data_len;
-            unsigned int rate;
-            int bits;
-            int channels;
-            unsigned int samples;
-            unsigned int block_size;
-            const void* initial_ptr;
-        };
+		struct _AILSOUNDINFO
+		{
+			int format;
+			const void* data_ptr;
+			unsigned int data_len;
+			unsigned int rate;
+			int bits;
+			int channels;
+			unsigned int samples;
+			unsigned int block_size;
+			const void* initial_ptr;
+		};
 
 #pragma pack(push, 4)
 		struct MssSound
 		{
-            _AILSOUNDINFO info;
-            char* data;
+			_AILSOUNDINFO info;
+			char* data;
 		};
 #pragma pack(pop)
 
@@ -1783,8 +1783,8 @@ namespace ZoneTool
 
 		union XAnimDynamicFrames
 		{
-			char (*_1)[3];
-			unsigned __int16 (*_2)[3];
+			char(*_1)[3];
+			unsigned __int16(*_2)[3];
 		};
 
 		union XAnimDynamicIndices
@@ -1850,7 +1850,7 @@ namespace ZoneTool
 			unsigned __int16 size;
 			XAnimDeltaPartQuatData u;
 		};
-		
+
 		struct XAnimDeltaPart
 		{
 			XAnimPartTrans* trans;
@@ -2145,16 +2145,6 @@ namespace ZoneTool
 		{
 			float base[3];
 			float amplitude[3];
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD_ARR(base, 3);
-				JSON_FIELD_ARR(amplitude, 3);
-
-				return data;
-			}
 		};
 
 		struct FxIntRange
@@ -2193,30 +2183,11 @@ namespace ZoneTool
 		{
 			int intervalMsec;
 			int count;
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD(intervalMsec);
-				JSON_FIELD(count);
-
-				return data;
-			}
 		};
 
 		struct FxSpawnDefOneShot
 		{
 			FxIntRange count;
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_STRUCT_REF(count);
-
-				return data;
-			}
 		};
 
 		union FxSpawnDef
@@ -2226,7 +2197,6 @@ namespace ZoneTool
 		};
 
 		struct FxEffectDef;
-
 		union FxEffectDefRef
 		{
 			FxEffectDef* handle;
@@ -2248,14 +2218,9 @@ namespace ZoneTool
 
 		union FxElemDefVisuals
 		{
+			FxElemMarkVisuals* markArray;
+			FxElemVisuals* array;
 			FxElemVisuals instance;
-			//If parent FxElemDef::elemType == 0x7, use xmodel
-			//If parent FxElemDef::elemType == 0xC, use effectDef
-			//If parent FxElemDef::elemType == 0xA, use soundName
-			//If parent FxElemDef::elemType != 0x9 || 0x8, use material
-
-			FxElemVisuals* array; //Total count = parent FxElemDef::visualCount
-			FxElemMarkVisuals* markArray; //Total count = parent FxElemDef::visualCount
 		};
 
 		struct FxTrailVertex
@@ -2263,17 +2228,6 @@ namespace ZoneTool
 			float pos[2];
 			float normal[2];
 			float texCoord;
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_FIELD_ARR(pos, 2);
-				JSON_FIELD_ARR(normal, 2);
-				JSON_FIELD(texCoord);
-
-				return data;
-			}
 		};
 
 		struct FxTrailDef
@@ -2286,7 +2240,7 @@ namespace ZoneTool
 			int vertCount;
 			FxTrailVertex* verts;
 			int indCount;
-			unsigned __int16* inds;
+			unsigned short* inds;
 		};
 
 		struct FxSparkFountainDef
@@ -2306,29 +2260,33 @@ namespace ZoneTool
 			float boostFactor;
 		};
 
+		struct FxSpotLightDef
+		{
+			float fovInnerFraction;
+			float startRadius;
+			float endRadius;
+			float brightness;
+			float maxLength;
+			int exponent;
+		};
+
 		union FxElemExtendedDefPtr
 		{
-			char* unknownDef;
-			FxSparkFountainDef* sparkFountain;
 			FxTrailDef* trailDef;
+			FxSparkFountainDef* sparkFountainDef;
+			FxSpotLightDef* spotLightDef;
+			char* unknownDef;
 		};
 
 		struct FxElemAtlas
 		{
-			char behavior;
-			char index;
-			char fps;
-			char loopCount;
-			char colIndexBits;
-			char rowIndexBits;
-			__int16 entryCount;
-
-			Json ToJson()
-			{
-				Json data;
-
-				return data;
-			}
+			unsigned char behavior;
+			unsigned char index;
+			unsigned char fps;
+			unsigned char loopCount;
+			unsigned char colIndexBits;
+			unsigned char rowIndexBits;
+			short entryCount;
 		};
 
 		struct FxElemVelStateInFrame
@@ -2484,30 +2442,6 @@ namespace ZoneTool
 			char useItemClip;
 			char fadeInfo;
 			int pad; // IW5 only
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_STRUCT_REF(spawnRange);
-				JSON_STRUCT_REF(fadeInRange);
-				JSON_STRUCT_REF(fadeOutRange);
-				JSON_STRUCT_REF(spawnDelayMsec);
-				JSON_STRUCT_REF(lifeSpanMsec);
-				JSON_STRUCT_REF(spawnOffsetRadius);
-				JSON_STRUCT_REF(spawnOffsetHeight);
-				JSON_STRUCT_REF(initialRotation);
-				JSON_STRUCT_REF(gravity);
-				JSON_STRUCT_REF(reflectionFactor);
-				JSON_STRUCT_REF(atlas);
-				JSON_STRUCT_REF(emitDist);
-				JSON_STRUCT_REF(emitDistVariance);
-				JSON_STRUCT_ARR(spawnOrigin, 3);
-				JSON_STRUCT_ARR(spawnAngles, 3);
-				JSON_STRUCT_ARR(angularVelocity, 3);
-
-				return data;
-			}
 		};
 
 		struct FxEffectDef
@@ -2519,26 +2453,11 @@ namespace ZoneTool
 			int elemDefCountLooping;
 			int elemDefCountOneShot;
 			int elemDefCountEmission;
-			char pad[20];
-			FxElemDef* elemDefs; //Count = elemDefCountOneShot + elemDefCountEmission + elemDefCountLooping
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_STRING(name);
-
-				JSON_FIELD(flags);
-				JSON_FIELD(totalSize);
-				JSON_FIELD(msecLoopingLife);
-				JSON_FIELD(elemDefCountLooping);
-				JSON_FIELD(elemDefCountOneShot);
-				JSON_FIELD(elemDefCountEmission);
-
-				JSON_STRUCT_ARR(elemDefs, elemDefCountLooping + elemDefCountOneShot + elemDefCountEmission);
-
-				return data;
-			}
+			float occlusionQueryDepthBias;
+			int occlusionQueryFadeIn;
+			int occlusionQueryFadeOut;
+			FxFloatRange occlusionQueryScaleRange;
+			FxElemDef* elemDefs;
 		};
 
 		// ClipMap
@@ -2891,7 +2810,7 @@ namespace ZoneTool
 			DynEntityColl* dynEntCollList[2];
 			char pad3[20];
 			std::uint32_t isPlutoniumMap;
-			
+
 			void test()
 			{
 
@@ -2992,42 +2911,13 @@ namespace ZoneTool
 			int isInUse;
 			unsigned int primaryLightCount;
 			ComPrimaryLight* primaryLights;
-
-			Json ToJson(bool fromIW5 = true)
-			{
-				Json data;
-
-				JSON_STRING(name);
-
-				JSON_FIELD(isInUse);
-				JSON_FIELD(primaryLightCount);
-
-				JSON_STRUCT_ARR(primaryLights, this->primaryLightCount);
-
-				for (int idata = 0; idata < this->primaryLightCount; idata++)
-				{
-					data["primaryLights"][idata] = this->primaryLights[idata].ToJson(fromIW5);
-				}
-
-				return data;
-			}
 		};
 
 #pragma pack(push, 4)
 		struct GfxLightImage
 		{
 			GfxImage* image;
-			char samplerState;
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_ASSET(image, GfxImage);
-				JSON_FIELD(samplerState);
-
-				return data;
-			}
+			unsigned char samplerState;
 		};
 #pragma pack(pop)
 
@@ -3037,18 +2927,6 @@ namespace ZoneTool
 			GfxLightImage attenuation;
 			GfxLightImage cucoloris;
 			int lmapLookupStart;
-
-			Json ToJson()
-			{
-				Json data;
-
-				JSON_STRING(name);
-				JSON_STRUCT_REF(attenuation);
-				JSON_STRUCT_REF(cucoloris);
-				JSON_FIELD(lmapLookupStart);
-
-				return data;
-			}
 		};
 
 		struct AddonMapEnts
@@ -3198,7 +3076,7 @@ namespace ZoneTool
 			GfxPortalWritable writable; // 4
 			DpvsPlane plane; // 20
 			int unknown1;
-			float (*vertices)[3];
+			float(*vertices)[3];
 			short unknown2;
 			char vertexCount;
 			//char unknown2[2];
@@ -3277,7 +3155,7 @@ namespace ZoneTool
 				struct
 				{
 					unsigned int reflectionProbeCount; // 4
-					GfxImage* * reflectionImages; // 4
+					GfxImage** reflectionImages; // 4
 					GfxReflectionProbe* reflectionProbes; // 4
 					GfxTexture* reflectionProbeTextures; //Count = reflectionProbeCount // 4
 				};
@@ -3314,7 +3192,7 @@ namespace ZoneTool
 				struct
 				{
 					unsigned int reflectionProbeCount; // 4
-					GfxImage* * reflectionImages; // 4
+					GfxImage** reflectionImages; // 4
 					GfxReflectionProbe* reflectionProbes; // 4
 					GfxTexture* reflectionProbeTextures; //Count = reflectionProbeCount // 4
 				};

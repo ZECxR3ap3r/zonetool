@@ -167,7 +167,7 @@ namespace ZoneTool
 				ZoneBuffer::clear_pointer(&dest->models);*/
 				dest->models = buf->write_s(3, dest->models, dest->modelCount);
 			}
-			
+
 			if (dest->hulls)
 			{
 				/*buf->align(3);
@@ -175,7 +175,7 @@ namespace ZoneTool
 				ZoneBuffer::clear_pointer(&dest->hulls);*/
 				dest->hulls = buf->write_s(3, dest->hulls, dest->hullCount);
 			}
-			
+
 			if (dest->slabs)
 			{
 				/*buf->align(3);

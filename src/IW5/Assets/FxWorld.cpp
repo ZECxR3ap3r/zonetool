@@ -28,7 +28,7 @@ namespace ZoneTool
 				return nullptr;
 			}
 
-			FxWorld *asset = read.read_array<FxWorld>();
+			FxWorld* asset = read.read_array<FxWorld>();
 			asset->name = read.read_string();
 
 			asset->glassSys.defs = read.read_array<FxGlassDef>();
